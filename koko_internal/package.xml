@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>koko</name>
+  <name>koko_internal</name>
   <version>0.0.0</version>
   <description>The koko internal metapackage contains internal tools for manufacturing and testing the Koko robot</description>
 
