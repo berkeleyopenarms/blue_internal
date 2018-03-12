@@ -1,0 +1,10 @@
+<launch>
+
+  <!-- Start rviz for visualization/debugging -->
+  <node
+    name="rviz"
+    pkg="rviz"
+    type="rviz"
+    args="-d $(find koko_description_sevendof_kin)/urdf.rviz" />
+
+</launch>
