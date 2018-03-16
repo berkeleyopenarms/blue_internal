@@ -35,13 +35,6 @@
     output="screen"
     args="koko_controllers/joint_state_controller koko_controllers/joint_position_controller" />
 
-  <!-- Publish a gravity vector -->
-  <node
-    name="accel_grav_publisher"
-    pkg="koko_control"
-    type="accel_gravity_publisher.py"
-    output="screen"/>
-
   <!-- [> Joint calibration <] -->
   <node
     name="hardstop_calibrator"
