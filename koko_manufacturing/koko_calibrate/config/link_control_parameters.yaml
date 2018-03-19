@@ -31,6 +31,6 @@ koko_controllers:
       - lift_joint
       - roll_joint
     lift_joint:
-      pid: {p: 25, i: 0, d: 4, i_clamp: 0}
+      pid: {p: 10, i: 0, d: 0.5, i_clamp: 0}
     roll_joint:
-      pid: {p: 15, i: 0, d: 3, i_clamp: 0}
+      pid: {p: 10, i: 0, d: 0.5, i_clamp: 0}

@@ -18,6 +18,13 @@
     type="rviz"
     args="-d $(find koko_description_link)/urdf.rviz" />
 
+  <!-- [> GUI <] -->
+  <node
+    name="gui_for_debugging"
+    pkg="rqt_gui"
+    type="rqt_gui"
+    output="screen"/>
+
   <!-- Start the hardware drivers -->
   <include
     file="$(find koko_hardware_drivers)/launch/motor_drivers.launch" />
@@ -34,13 +41,6 @@
     respawn="false"
     output="screen"
     args="koko_controllers/joint_state_controller koko_controllers/joint_position_controller" />
-
-  <!-- Publish a gravity vector -->
-  <node
-    name="accel_grav_publisher"
-    pkg="koko_control"
-    type="accel_gravity_publisher.py"
-    output="screen"/>
 
   <!-- Joint calibration -->
   <node

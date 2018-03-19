@@ -9,36 +9,17 @@ from koko_hardware_drivers.msg import MotorState
 class Base:
     def __init__(self):
         self.offset = 0.52935836
-        p_constants = [58.0]
-        d_constants = [1.0]
 
         rospy.init_node('Base_Calibration', anonymous=True)
 
         rate = rospy.Rate(200)
 
-        self.p_publisher = rospy.Publisher("/p_terms", Float64MultiArray, queue_size=1)
-        self.d_publisher = rospy.Publisher("/d_terms", Float64MultiArray, queue_size=1)
-
-        self.cmd = rospy.Publisher("/koko_controllers/joint_positions_controller/command", Float64MultiArray, queue_size=1)
+        self.cmd = rospy.Publisher("/koko_controllers/joint_position_controller/command", Float64MultiArray, queue_size=1)
         self.pos = [0.0]
         self.motor_pos = [0.0]
 
-        self.set_pd(p_constants, d_constants)
         rospy.Subscriber("/joint_states", JointState, self.update_joints)
         rospy.Subscriber("/koko_hardware/motor_states", MotorState, self.update_motors)
-
-    def set_pd(self, p, d):
-        for i in range(2):
-            p_terms = Float64MultiArray()
-            d_terms = Float64MultiArray()
-
-            p_terms.data = p
-            d_terms.data = d
-
-            self.p_publisher.publish(p_terms)
-            self.d_publisher.publish(d_terms)
-            rospy.logerr('finished publishing new PD constants')
-            time.sleep(1)
 
     def set_pos(self, cmds):
         # print(cmds)
@@ -65,47 +46,25 @@ class Base:
         return (max_pos + min_pos) / 2.0, max_pos, min_pos
 
     def find_end(self, j, direction):
-        eps = 2.5 # joint position erro in radians
+        eps = 2.0 # joint position erro in radians
         curr_error = 0
-        delta = 0.06
+        delta = 0.05
         command_pos = self.pos[:]
         while curr_error < eps and not rospy.is_shutdown():
             # rospy.logerr("{}".format(curr_error))
             command_pos[j] = command_pos[j] + direction *  delta
             self.set_pos(command_pos)
             curr_error = np.abs(command_pos[j] - self.pos[j])
-            # rospy.logerr("{}".format(curr_error))
-            rospy.sleep(0.03)
+            rospy.logerr("{}".format(curr_error))
+            rospy.sleep(0.01)
 
         rospy.sleep(0.5)
         rospy.loginfo('done finding the end')
         return self.pos[j]
 
-    def find_pos(self, pos_targ):
-        j = 0
-        eps = 2.5 # joint position erro in radians
-        curr_error = 0
-        delta = 0.06
-        command_pos = self.pos[:]
-        direction = 1.0
-        print('Finding end')
-        if pos_targ > self.pos[0]:
-            direction = -1.0
-        while np.abs(self.pos[0] - pos_targ) > eps and not rospy.is_shutdown():
-            # rospy.logerr("{}".format(curr_error))
-            command_pos[j] = command_pos[j] + direction *  delta
-            self.set_pos(command_pos)
-            # print('Finding end')
-            curr_error = np.abs(command_pos[j] - self.pos[j])
-            # rospy.logerr("{}".format(curr_error))
-            rospy.sleep(0.02)
-
-        rospy.sleep(0.5)
-        rospy.loginfo('done finding the end')
-        return self.pos[j]
 if __name__ == '__main__':
     link = Base()
-    iterations = 5
+    iterations = 3
     link = Base()
     rospy.loginfo('Link setup complete')
     # set to start up position
@@ -117,27 +76,17 @@ if __name__ == '__main__':
     print(max_roll - min_roll)
     go_to_value = center_roll - link.offset
     print('Finding end')
-    link.find_pos(go_to_value)
+    link.set_pos([go_to_value])
     rospy.sleep(2)
     print(link.pos[0])
     print(go_to_value)
     print(link.pos[0])
 
-    rospy.sleep(2)
-    p_constants = [40.0]
-    d_constants = [1.0]
-    link.set_pd(p_constants, d_constants)
-    rospy.sleep(2)
+    rospy.sleep(1)
     link.set_pos([go_to_value])
-    link.find_pos(go_to_value)
     print(center_roll, "center roll")
     rospy.sleep(2)
     rospy.loginfo('Script Complete')
-
-    rospy.sleep(1)
-    p_constants = [0.0]
-    d_constants = [0.0]
-    link.set_pd(p_constants, d_constants)
 
     print("Motor Position")
     print(link.motor_pos[0])

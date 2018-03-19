@@ -35,6 +35,13 @@
     output="screen"
     args="koko_controllers/joint_state_controller koko_controllers/joint_position_controller" />
 
+  <!-- [> GUI <] -->
+  <node
+    name="gui_for_debugging"
+    pkg="rqt_gui"
+    type="rqt_gui"
+    output="screen"/>
+
   <!-- [> Joint calibration <] -->
   <node
     name="hardstop_calibrator"

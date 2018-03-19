@@ -11,8 +11,6 @@ koko_hardware:
     id_torque_gains: [0.0]
     softstop_min_angles: [-8.2]
     softstop_max_angles: [8.2]
-    calibration_encoder: [3.5856800916826863] # deprecated
-    calibration_joint_vive: [0.085327798760949689] #deprecated
     differential_pairs: []
     #vive or rviz
     target_mode: "vive"
