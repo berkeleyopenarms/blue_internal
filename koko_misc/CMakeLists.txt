@@ -9,6 +9,7 @@ project(koko_misc)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   interactive_markers
+  koko_hardware_drivers
   roscpp
   sensor_msgs
   rospy

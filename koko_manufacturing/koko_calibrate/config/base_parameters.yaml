@@ -8,6 +8,7 @@ koko_hardware:
     calibration_initial_angles: [0.0]
     hardstop_start_angles: [0.0] # angles that you the robot is in for hardstop calibration
     joint_torque_directions: [1.0]
+    motor_current_limits: [0.2]
     id_torque_gains: [0.0]
     softstop_min_angles: [-8.2]
     softstop_max_angles: [8.2]
