@@ -6,6 +6,8 @@ find_package(catkin REQUIRED COMPONENTS
   interactive_markers
   kdl_parser
   orocos_kdl
+  actionlib
+  rospy
   roscpp
   std_msgs
   tf
