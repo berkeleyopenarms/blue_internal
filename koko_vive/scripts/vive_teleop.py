@@ -47,7 +47,6 @@ class GripperClient(object):
         self._goal.command.position = -1.5 * msg.data
         self._client.send_goal(self._goal)
         self.wait()
-        rospy.logerr("sent {}".format(msg.data))
 
     def set_effort(self, eff):
         self._goal.command.max_effort = eff
@@ -59,7 +58,6 @@ def command_callback(msg):
     global command_publisher
     global cmd_label
     if cmd_label == 25:
-        rospy.logerr("got pose with 25")
         command_publisher.publish(msg)
 
 def label_callback(msg):
