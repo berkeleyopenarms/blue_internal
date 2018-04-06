@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 from geometry_msgs.msg import Vector3
 from koko_hardware_drivers.msg import MotorState
@@ -9,6 +10,8 @@ REPORT_FREQ = 2
 temperatures = {}
 
 def get_temp(msg):
+    global temperatures
+
     temp = {} # pun intended
     for i, name in enumerate(msg.name):
         temp[name] = msg.temperature[i]
@@ -17,10 +20,7 @@ def get_temp(msg):
 #################################################################################################
 
 def main():
-    global x_accum
-    global y_accum
-    global z_accum
-    global num
+    global temperatures
 
     rospy.init_node('temperature_monitor', anonymous=True)
     rospy.Subscriber("koko_hardware/motor_states", MotorState, get_temp, queue_size=1)
@@ -39,7 +39,7 @@ def main():
                 values.append(rospy.get_time())
                 for name in motor_names:
                     values.append(temperatures[name])
-
+            values = [str(x) for x in values]
             print(','.join(values))
             first = False
         r.sleep()
