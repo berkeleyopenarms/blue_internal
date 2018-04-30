@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   kdl_parser
   interactive_markers tf visualization_msgs
+  koko_controllers
 )
 find_package(orocos_kdl)
 
@@ -19,3 +20,6 @@ catkin_package()
 
 add_executable(pose_target src/pose_target.cpp)
 target_link_libraries(pose_target ${catkin_LIBRARIES})
+
+add_executable(pose_target_posture src/pose_target_posture.cpp)
+target_link_libraries(pose_target_posture ${catkin_LIBRARIES})
