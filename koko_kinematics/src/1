@@ -33,7 +33,6 @@ class SubscribeAndPublish
 public:
   SubscribeAndPublish()
   {
-    starting = true;
     if (!n_.getParam("/koko_hardware/posture_control", posture_control)) {
       ROS_ERROR("No posture_control given node namespace %s", n_.getNamespace().c_str());
     }
@@ -119,20 +118,9 @@ public:
           jointPositions(i) = msg.position[index];
           break;
         } else if (index == nj - 1){
-           ROS_ERROR_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
+           ROS_DEBUG_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
         }
       }
-    }
-
-    KDL::ChainFkSolverPos_recursive fksolver1(chain);
-    if (starting) {
-      KDL::Frame cartpos_start;
-      int status = fksolver1.JntToCart(jointPositions, cartpos_start);
-      commandPose.position.x = cartpos_start.p.data[0];
-      commandPose.position.y = cartpos_start.p.data[1];
-      commandPose.position.z = cartpos_start.p.data[2];
-      cartpos_start.M.GetQuaternion(commandPose.orientation.x, commandPose.orientation.y, commandPose.orientation.z, commandPose.orientation.w);
-      starting = false;
     }
 
     // for (int i = 0; i < nj; i++) {
@@ -148,7 +136,8 @@ public:
     // }
 
     //ROS_INFO("current joint pos %f, %f, %f", msg.position[0], msg.position[1], msg.position[2]);
-
+    KDL::ChainFkSolverPos_recursive fksolver1(chain);
+    
     // ROS_ERROR("chain num joints %d", chain.getNrOfJoints());
     //ROS_INFO("desired commandpos with joint count %d:  %f, %f, %f", nj, commandPose.position.x, commandPose.position.y, commandPose.position.z);
     KDL::Frame cartpos;
@@ -158,6 +147,12 @@ public:
     KDL::Jacobian jacobian(nj);
     KDL::ChainJntToJacSolver jacSolver(chain);
     jacSolver.JntToJac(jointPositions, jacobian, -1);
+
+      for (unsigned int joint = 0; joint < nj; joint++) {
+        for (unsigned int index = 0; index < 6; index ++) {
+          ROS_ERROR("In outer jacobian %d, %d = %f", index, joint, jacobian(index,joint));
+        }
+      }
 
     //ROS_INFO("j_x %f", jacobian(0,0));
     //ROS_INFO("j_y %f", jacobian(1,0));
@@ -197,22 +192,12 @@ public:
                                                                commandPose.orientation.w
                                                                );
 
-    // ROS_ERROR("%f command rot x",commandPose.orientation.x);
-    // ROS_ERROR("%f command rot y",commandPose.orientation.y);
-    // ROS_ERROR("%f command rot z",commandPose.orientation.z);
-    // ROS_ERROR("%f command rot w",commandpose.orientation.w);
-
-    // for(int j = 0; j <9; j ++){
-      // ROS_ERROR("desired_rot %f", desired_rotation.data[j]);
-    // }
     // ROS_ERROR("desired position: %f, %f, %f", ee_pose_desired(0), ee_pose_desired(1), ee_pose_desired(2));
-
-    ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
 
     for (int j = 0; j < 40; j++)
     {
       int status = fksolver1.JntToCart(jointInverseKin, cartpos);
-      // ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
+      ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
       jacSolver.JntToJac(jointInverseKin, jacobian, -1);
 
       Eigen::Matrix<double,6,Eigen::Dynamic> jacPos(6,nj);
@@ -220,7 +205,7 @@ public:
       for (unsigned int joint = 0; joint < nj; joint++) {
         for (unsigned int index = 0; index < 6; index ++) {
           jacPos(index,joint) = jacobian(index,joint);
-          // ROS_ERROR("jacobian %d, %d = %f", index, joint, jacPos(index,joint));
+          ROS_ERROR("jacobian %d, %d = %f", index, joint, jacPos(index,joint));
         }
       }
 
@@ -228,13 +213,10 @@ public:
       for (int i = 0; i < 3; i ++) {
         ee_pose_cur(i, 0) = cartpos.p.data[i];
       }
-      // ROS_ERROR("%f ee_pose_cur, %d",ee_pose_cur(1,0), 1);
+      ROS_ERROR("%f ee_pose_cur, %d",ee_pose_cur(1,0), 1);
 
       KDL::Rotation rotation_difference = desired_rotation * cartpos.M.Inverse();
       KDL::Vector rotation_difference_vec = rotation_difference.GetRot();
-      if(j == 0){
-        ROS_DEBUG_THROTTLE(1, "%f rot_difference", rotation_difference_vec[0]);
-      }
 
       Eigen::Matrix<double, 3, Eigen::Dynamic> pose_difference = ee_pose_desired - ee_pose_cur;
 
@@ -253,20 +235,15 @@ public:
       deltaX(5, 0) = rotation_difference_vec(2);
 
 
-      // ROS_ERROR("%f deltaX, %d",deltaX(0,0), 0);
-      // ROS_ERROR("%f deltaX, %d",deltaX(1,0), 1);
-      // ROS_ERROR("%f deltaX, %d",deltaX(2,0), 2);
-      // ROS_ERROR("%f deltaX, %d",deltaX(3,0), 3);
-      // ROS_ERROR("%f deltaX, %d",deltaX(4,0), 4);
-      // ROS_ERROR("%f deltaX, %d",deltaX(5,0), 5);
+      ROS_ERROR("%f deltaX, %d",deltaX(1,0), 1);
+      ROS_ERROR("%f deltaX, %d",deltaX(2,0), 2);
+      ROS_ERROR("%f deltaX, %d",deltaX(3,0), 3);
+      ROS_ERROR("%f deltaX, %d",deltaX(4,0), 4);
+      ROS_ERROR("%f deltaX, %d",deltaX(5,0), 5);
       Eigen::MatrixXd deltaJoint = jacPos.transpose() * deltaX;
 
-      double alpha = 1.0;
-      if (j > 20){
-        alpha = 0.2;
-      } else {
-        alpha = 0.05;
-      }
+
+      double alpha = 0.01
       for (int k = 0; k < nj; k++) {
         jointInverseKin(k) = alpha * deltaJoint(k,0) + jointInverseKin(k);
       }
@@ -292,7 +269,7 @@ public:
         Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  nullspace_proj = I_nj - jacobian_pinv * jacobian_eig;
         Eigen::Matrix<double, Eigen::Dynamic, 1> posture_error_proj = nullspace_proj * (posture_gain * posture_error);
         for(int i = 0; i < nj; i++) {
-          jointInverseKin(i) = alpha * posture_error_proj(i, 0) + jointInverseKin(i);
+          jointInverseKin(i) = posture_error_proj(i, 0) + jointInverseKin(i);
         }
       }
       // end posture control stuff
@@ -340,10 +317,6 @@ public:
     commandPose = msg.pose;
     // ROS_ERROR("%f command pose",commandPose.position.x);
     // ROS_ERROR("%f command pose",commandPose.orientation.x);
-    // ROS_ERROR("callback%f command rot x",commandPose.orientation.x);
-    // ROS_ERROR("callback%f command rot y",commandPose.orientation.y);
-    // ROS_ERROR("callback%f command rot z",commandPose.orientation.z);
-    // ROS_ERROR("callback%f command rot w",commandPose.orientation.w);
   }
 
   void commandCallback(const std_msgs::Int32 msg)
@@ -373,7 +346,6 @@ private:
   std::vector<double> posture_target;
   double posture_gain;
   bool posture_control;
-  bool starting;
 };
 
 

@@ -624,60 +624,6 @@
     <axis
       xyz="0 0 0" />
   </joint>
-  <link
-    name="kinect_link">
-    <inertial>
-      <origin
-        xyz="-0.0952490898693 0.00471420843080317 -0.0346426773697052"
-        rpy="0 0 0" />
-      <mass
-        value="0.813673516453062" />
-      <inertia
-        ixx="0.000581150692622535"
-        ixy="4.62294718788866E-07"
-        ixz="-1.50876493820384E-05"
-        iyy="0.00408834053911525"
-        iyz="-2.71687565363891E-05"
-        izz="0.00394908691785969" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://koko_description_sevendof_kin/meshes/kinect_link.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.101960784313725 0.101960784313725 0.101960784313725 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://koko_description_sevendof_kin/meshes/kinect_link.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="kinect_joint"
-    type="fixed">
-    <origin
-      xyz="-0.2028 -0.18952 0.52978"
-      rpy="1.5662 1.5708 0" />
-    <parent
-      link="base_link" />
-    <child
-      link="kinect_link" />
-    <axis
-      xyz="0 0 0" />
-  </joint>
-
   <joint name ="world_joint" type= "fixed">
     <origin xyz="0 0 2" rpy="0 0 0" />
     <parent link="world"/>
