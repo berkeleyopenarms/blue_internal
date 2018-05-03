@@ -2,7 +2,7 @@
 import sys
 import rospy
 from geometry_msgs.msg import Vector3
-from koko_hardware_drivers.msg import MotorState
+from sensor_msgs.msg import JointState
 import numpy as np
 import tf.transformations as transformations
 
@@ -13,45 +13,45 @@ import tf.transformations as transformations
 
 REPORT_FREQ = 100
 
-temperatures = {}
-d_currents = {}
-q_currents = {}
+joint_pos = {}
+joint_vel = {}
+# q_currents = {}
 
-def get_temp(msg):
+def get_joints(msg):
     # in retrospect, we could probably just save
     # the msg object instead of using all these
     # global dicts
 
-    global temperatures
-    temp = dict(temperatures) # pun intended
+    global joint_pos
+    temp = dict(joint_pos)
     for i, name in enumerate(msg.name):
-        temp[name] = msg.temperature[i]
-    temperatures = temp
+        temp[name] = msg.position[i]
+    joint_pos = temp
 
-    global d_currents
-    temp = dict(d_currents)
+    global joint_vel
+    temp = dict(joint_vel)
     for i, name in enumerate(msg.name):
         temp[name] = msg.direct_current[i]
-    d_currents = temp
+    joint_vel = temp
 
-    global q_currents
-    temp = dict(q_currents)
-    for i, name in enumerate(msg.name):
-        temp[name] = msg.quadrature_current[i]
-    q_currents = temp
+    # global q_currents
+    # temp = dict(q_currents)
+    # for i, name in enumerate(msg.name):
+        # temp[name] = msg.quadrature_current[i]
+    # q_currents = temp
 
 #################################################################################################
 
 def main():
     global temperatures
 
-    rospy.init_node('temperature_monitor', anonymous=True)
-    rospy.Subscriber("koko_hardware/motor_states", MotorState, get_temp, queue_size=1)
+    rospy.init_node('joint_monitor', anonymous=True)
+    rospy.Subscriber("/joint_states", JointState, get_joints, queue_size=1)
 
     r = rospy.Rate(REPORT_FREQ)
     motor_names = []
     while not rospy.is_shutdown():
-        if len(temperatures) > 0:
+        if len(joint_pos) > 0:
             values = []
             if len(temperatures) > len(motor_names):
                 motor_names = sorted(temperatures.keys())
