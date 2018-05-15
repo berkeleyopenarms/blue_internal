@@ -15,6 +15,7 @@
   <author email="zoemccarthy12@gmail.com">Zoe McCarthy</author>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>blue_controllers</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>

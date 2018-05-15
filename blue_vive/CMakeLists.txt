@@ -5,7 +5,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   interactive_markers
   kdl_parser
-  orocos_kdl
   actionlib
   rospy
   roscpp
