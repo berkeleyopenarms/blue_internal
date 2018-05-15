@@ -1,0 +1,52 @@
+<launch>
+  <include
+    file="$(find blue_gazebo)/launch/gazebo_6dof.launch" />
+    
+  <include 
+    file="$(find blue_gazebo)/launch/gazebo_controller_6dof.launch" />
+
+ <arg
+    name="model" />
+
+  <arg
+    name="gui"
+    default="True" />
+
+  <param
+    name="robot_dyn_description"
+    textfile="$(find blue_gazebo)/robots/6dof_dyn2.urdf" />
+
+  <param
+    name="use_gui"
+    value="$(arg gui)" />
+
+  <node
+    name="rviz"
+    pkg="rviz"
+    type="rviz"
+    args="-d $(find blue_gazebo)/urdf.rviz" />
+
+  <node
+    name="visual_controller"
+    pkg="blue_misc"
+    type="visual_controller"/>
+  <node 
+    pkg="rostopic" 
+    type="rostopic" 
+    name="rostopic" 
+    args="pub /command_label std_msgs/Int32 25"/>
+
+
+  <node
+    name="pose_target"
+    pkg="blue_gazebo"
+    type="pose_target_simulation" />
+
+  <node name="pos_plot"
+    pkg="rqt_plot"
+    type="rqt_plot"
+    args="/blue_gazebo/simple_controller/command/data[2]" />
+
+
+
+</launch>
