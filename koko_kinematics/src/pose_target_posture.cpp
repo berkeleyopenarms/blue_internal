@@ -119,7 +119,7 @@ public:
           jointPositions(i) = msg.position[index];
           break;
         } else if (index == nj - 1){
-           ROS_ERROR_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
+           // ROS_ERROR_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
         }
       }
     }
@@ -207,9 +207,9 @@ public:
     // }
     // ROS_ERROR("desired position: %f, %f, %f", ee_pose_desired(0), ee_pose_desired(1), ee_pose_desired(2));
 
-    ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
+    // ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
 
-    for (int j = 0; j < 40; j++)
+    for (int j = 0; j < 60; j++)
     {
       int status = fksolver1.JntToCart(jointInverseKin, cartpos);
       // ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
@@ -248,22 +248,16 @@ public:
       // deltaX(3, 0) = 0;
       // deltaX(4, 0) = 0;
       // deltaX(5, 0) = 0;
-      deltaX(3, 0) = rotation_difference_vec(0);
-      deltaX(4, 0) = rotation_difference_vec(1);
-      deltaX(5, 0) = rotation_difference_vec(2);
+      double rot_adj = 0.1;
+      deltaX(3, 0) = rot_adj * rotation_difference_vec(0);
+      deltaX(4, 0) = rot_adj * rotation_difference_vec(1);
+      deltaX(5, 0) = rot_adj * rotation_difference_vec(2);
 
-
-      // ROS_ERROR("%f deltaX, %d",deltaX(0,0), 0);
-      // ROS_ERROR("%f deltaX, %d",deltaX(1,0), 1);
-      // ROS_ERROR("%f deltaX, %d",deltaX(2,0), 2);
-      // ROS_ERROR("%f deltaX, %d",deltaX(3,0), 3);
-      // ROS_ERROR("%f deltaX, %d",deltaX(4,0), 4);
-      // ROS_ERROR("%f deltaX, %d",deltaX(5,0), 5);
       Eigen::MatrixXd deltaJoint = jacPos.transpose() * deltaX;
 
       double alpha = 1.0;
-      if (j > 20){
-        alpha = 0.2;
+      if (j > 30){
+        alpha = 0.3;
       } else {
         alpha = 0.05;
       }
@@ -296,7 +290,6 @@ public:
         }
       }
       // end posture control stuff
-      
 
 
 
@@ -307,7 +300,6 @@ public:
     std_msgs::Float64MultiArray commandMsg;
     if (receivedVisualTarget && command_label == 25){ for (int i = 0; i < nj; i++) {
           commandMsg.data.push_back(jointInverseKin(i));
-          // ROS_ERROR("published command %d, %f", i, commandMsg.data[i]);
         }
       pub.publish(commandMsg);
     }
@@ -338,12 +330,6 @@ public:
       receivedVisualTarget = true;
     }
     commandPose = msg.pose;
-    // ROS_ERROR("%f command pose",commandPose.position.x);
-    // ROS_ERROR("%f command pose",commandPose.orientation.x);
-    // ROS_ERROR("callback%f command rot x",commandPose.orientation.x);
-    // ROS_ERROR("callback%f command rot y",commandPose.orientation.y);
-    // ROS_ERROR("callback%f command rot z",commandPose.orientation.z);
-    // ROS_ERROR("callback%f command rot w",commandPose.orientation.w);
   }
 
   void commandCallback(const std_msgs::Int32 msg)
@@ -390,13 +376,17 @@ int main(int argc, char** argv)
     return false;
   }
   std::string end_tracker_link;
-
-  if (!node.getParam("/koko_hardware/endlink_tracker",  end_tracker_link)) {
+  if (!node.getParam("/koko_hardware/endlink",  end_tracker_link)) {
+    ROS_ERROR("No /koko_hardware/endlink_tracker loaded in rosparam");
+    return false;
+  }
+  std::string base_link;
+  if (!node.getParam("/koko_hardware/baselink",  base_link)) {
     ROS_ERROR("No /koko_hardware/endlink_tracker loaded in rosparam");
     return false;
   }
 
-  bool exit_value = my_tree.getChain("base_link", end_tracker_link, chain);
+  bool exit_value = my_tree.getChain(base_link, end_tracker_link, chain);
   ROS_ERROR("%d exit value get Chain in pose target posture", exit_value);
   SubscribeAndPublish sp;
 

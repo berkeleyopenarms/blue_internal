@@ -43,7 +43,8 @@ def get_joints(msg):
 #################################################################################################
 
 def main():
-    global temperatures
+    global joint_pos
+    global joint_vel
 
     rospy.init_node('joint_monitor', anonymous=True)
     rospy.Subscriber("/joint_states", JointState, get_joints, queue_size=1)
@@ -53,20 +54,19 @@ def main():
     while not rospy.is_shutdown():
         if len(joint_pos) > 0:
             values = []
-            if len(temperatures) > len(motor_names):
+            if len(joint_pos) > len(motor_names):
                 motor_names = sorted(temperatures.keys())
                 values.append("time")
-                values.extend([n + " temp" for n in motor_names])
-                values.extend([n + " d current" for n in motor_names])
-                values.extend([n + " q current" for n in motor_names])
+                values.extend([n + " pos" for n in motor_names])
+                values.extend([n + " vel" for n in motor_names])
             else:
                 values.append(str(rospy.get_time()))
                 def add_to_output(source):
                     for name in motor_names:
                         values.append(str(source[name]))
-                add_to_output(temperatures)
-                add_to_output(d_currents)
-                add_to_output(q_currents)
+                add_to_output(joint_pos)
+                add_to_output(joint_vel)
+                # add_to_output(q_currents)
 
             print ','.join(values)
             sys.stdout.flush()

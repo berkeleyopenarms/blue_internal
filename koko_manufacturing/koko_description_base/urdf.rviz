@@ -38,6 +38,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
         - /RobotModel1
         - /InteractiveMarkers1
         - /TF1
@@ -77,67 +78,47 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
+        right_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        base_tracker_link:
+        right_elbow_lift_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        ee_tracker_link:
+        right_elbow_roll_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        forearm_link:
+        right_end_roll_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        forearm_tracker_link:
+        right_gripper_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        gripper_link:
+        right_shoulder_lift_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        shoulder_lift_link:
+        right_shoulder_roll_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        shoulder_link:
+        right_wrist_lift_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        upper_arm_lift_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        upper_arm_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        upper_arm_tracker_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wrist_lift_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wrist_roll_link:
+        right_wrist_roll_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -164,57 +145,41 @@ Visualization Manager:
         All Enabled: false
         base_link:
           Value: false
-        base_tracker_link:
-          Value: false
-        ee_tracker_link:
-          Value: false
-        forearm_link:
-          Value: false
-        forearm_tracker_link:
-          Value: false
-        gripper_link:
-          Value: false
-        shoulder_lift_link:
-          Value: false
-        shoulder_link:
-          Value: false
-        upper_arm_lift_link:
-          Value: false
-        upper_arm_link:
-          Value: false
-        upper_arm_tracker_link:
-          Value: false
+        right_base_link:
+          Value: true
+        right_elbow_lift_link:
+          Value: true
+        right_elbow_roll_link:
+          Value: true
+        right_end_roll_link:
+          Value: true
+        right_gripper_link:
+          Value: true
+        right_shoulder_lift_link:
+          Value: true
+        right_shoulder_roll_link:
+          Value: true
+        right_wrist_lift_link:
+          Value: true
+        right_wrist_roll_link:
+          Value: true
         world:
           Value: false
-        wrist_lift_link:
-          Value: false
-        wrist_roll_link:
-          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
       Tree:
+        right_base_link:
+          right_shoulder_roll_link:
+            right_shoulder_lift_link:
+              right_elbow_roll_link:
+                right_elbow_lift_link:
+                  {}
         world:
           base_link:
-            base_tracker_link:
-              {}
-            shoulder_link:
-              shoulder_lift_link:
-                upper_arm_link:
-                  upper_arm_lift_link:
-                    forearm_link:
-                      forearm_tracker_link:
-                        {}
-                      wrist_lift_link:
-                        wrist_roll_link:
-                          ee_tracker_link:
-                            {}
-                          gripper_link:
-                            {}
-                  upper_arm_tracker_link:
-                    {}
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -250,7 +215,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: right_base_link
     Frame Rate: 30
   Name: root
   Tools:

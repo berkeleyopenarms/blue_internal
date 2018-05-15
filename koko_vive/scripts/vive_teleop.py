@@ -74,7 +74,7 @@ def main():
 
     gc = GripperClient()
     gc.clear()
-    gc.set_effort(2.2)
+    gc.set_effort(2.5)
     r = rospy.Rate(500)
     while not rospy.is_shutdown():
         r.sleep()
