@@ -1,0 +1,68 @@
+<launch>
+  <include
+    file="$(find blue_descriptions)/launch/gazebo.launch" />
+
+  <include
+    file="$(find blue_gazebo)/launch/_single_arm_gazebo.launch">
+    <arg name="side" value="left"/>
+  </include>
+
+  <include
+    file="$(find blue_gazebo)/launch/_single_arm_gazebo.launch">
+    <arg name="side" value="right"/>
+  </include>
+
+  <node
+    name="controller_spawner_right"
+    pkg="controller_manager"
+    type="spawner"
+    respawn="false"
+    output="screen"
+    args="/right_arm/blue_controllers/joint_state_controller /right_arm/blue_controllers/gripper_controller /right_arm/blue_controllers/joint_position_controller"/>
+
+  <node
+    name="controller_spawner_left"
+    pkg="controller_manager"
+    type="spawner"
+    respawn="false"
+    output="screen"
+    args="/left_arm/blue_controllers/joint_state_controller /left_arm/blue_controllers/gripper_controller /left_arm/blue_controllers/joint_position_controller"/>
+
+ <arg
+    name="model" />
+
+  <arg
+    name="gui"
+    default="True" />
+
+  <param
+    name="use_gui"
+    value="$(arg gui)" />
+
+  <node
+    name="rviz"
+    pkg="rviz"
+    type="rviz"
+    args="-d $(find blue_gazebo)/urdf.rviz" />
+
+  <node
+    name="gui_control"
+    pkg="rqt_gui"
+    type="rqt_gui" />
+
+  <node
+    name="robot_state_publisher"
+    pkg="robot_state_publisher"
+    type="robot_state_publisher"
+    respawn="false"
+    output="screen">
+  </node>
+
+  <!-- <node name="pos_plot" -->
+    <!-- pkg="rqt_plot" -->
+    <!-- type="rqt_plot" -->
+    <!-- args="/blue_gazebo/simple_controller/command/data[2]" /> -->
+
+
+
+</launch>
