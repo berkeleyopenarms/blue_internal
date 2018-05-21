@@ -2,7 +2,8 @@
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/jntarray.hpp>
-#include <std_msgs/Bool.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <string>
@@ -33,30 +34,31 @@ public:
   SubscribeAndPublish()
   {
     starting = true;
-    if (!n_.getParam("blue_hardware/posture_control", posture_control)) {
+    if (!n_.getParam("/blue_hardware/posture_control", posture_control)) {
       ROS_ERROR("No posture_control given node namespace %s", n_.getNamespace().c_str());
     }
-    if (!n_.getParam("blue_hardware/posture_target", posture_target)) {
+    if (!n_.getParam("/blue_hardware/posture_target", posture_target)) {
       ROS_ERROR("No posture_target given node namespace %s", n_.getNamespace().c_str());
     }
-    if (!n_.getParam("blue_hardware/posture_gain", posture_gain)) {
+    if (!n_.getParam("/blue_hardware/posture_gain", posture_gain)) {
       ROS_ERROR("No posture_gain given node namespace %s", n_.getNamespace().c_str());
     }
     nj = posture_target.size();
 
-    receivedTarget = false;
-    pub = n_.advertise<std_msgs::Float64MultiArray>("blue_controllers/joint_position_controller/command", 1);
-    target_pub = n_.advertise<geometry_msgs::PoseStamped>("target_pose_pub", 1);
-    subJoint = n_.subscribe("joint_states", 1, &SubscribeAndPublish::jointCallback, this);
-    subController = n_.subscribe("controller_pose", 1, &SubscribeAndPublish::controllerPoseCallback, this);
-    subClutch = n_.subscribe("clutch", 1, &SubscribeAndPublish::clutchCallback, this);
+    receivedVisualTarget = false;
+    pub = n_.advertise<std_msgs::Float64MultiArray>("/blue_controllers/joint_position_controller/command", 1000);
+    subJoint = n_.subscribe("/joint_states", 1000, &SubscribeAndPublish::jointCallback, this);
+    // subVisual = n_.subscribe("/basic_controls/feedback", 1000, &SubscribeAndPublish::visualCallback, this);
+    subController = n_.subscribe("/right_controller_pose", 1000, &SubscribeAndPublish::controllerPoseCallback, this);
+    subCommand = n_.subscribe("/command_label", 1000, &SubscribeAndPublish::commandCallback, this);
     arrowPub = n_.advertise<visualization_msgs::Marker>("arrow_marker", 0);
 
-    if (!n_.getParam("blue_hardware/joint_names", joint_names)) {
+    if (!n_.getParam("/blue_hardware/joint_names", joint_names)) {
       ROS_ERROR("No joint_names given (namespace: %s)", n_.getNamespace().c_str());
     }
     total_joints = my_tree.getNrOfJoints();
 
+    command_label = 0;
     marker.header.frame_id = "base_link";
     marker.header.stamp = ros::Time();
     marker.ns = "my_namespace";
@@ -119,7 +121,8 @@ public:
         } else if (index == nj - 1){
            // ROS_ERROR_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
         }
-      } }
+      }
+    }
 
     KDL::ChainFkSolverPos_recursive fksolver1(chain);
     if (starting) {
@@ -183,45 +186,16 @@ public:
       jointInverseKin(i) = jointPositions(i);
     }
 
-    KDL::Frame command_pose_kdl_frame;
-    command_pose_kdl_frame.p.data[0] = commandPose.position.x;
-    command_pose_kdl_frame.p.data[1] = commandPose.position.y;
-    command_pose_kdl_frame.p.data[2] = commandPose.position.z;
-    command_pose_kdl_frame.M = KDL::Rotation::Quaternion(commandPose.orientation.x, commandPose.orientation.y, commandPose.orientation.z, commandPose.orientation.w);
-
-    command_pose_kdl_frame = command_pose_kdl_frame * zeroFrame.Inverse();
-
     Eigen::Matrix<double, 3, Eigen::Dynamic> ee_pose_desired(3,1);
-    // ee_pose_desired(0, 0) = commandPose.position.x - zeroFrame.p.data[0];
-    // ee_pose_desired(1, 0) = commandPose.position.y - zeroFrame.p.data[1];
-    // ee_pose_desired(2, 0) = commandPose.position.z - zeroFrame.p.data[2];
-    // ee_pose_desired(0, 0) = commandPose.position.x;
-    // ee_pose_desired(1, 0) = commandPose.position.y;
-    // ee_pose_desired(2, 0) = commandPose.position.z;
-    ee_pose_desired(0,0) = command_pose_kdl_frame.p[0];
-    ee_pose_desired(1,0) = command_pose_kdl_frame.p[1];
-    ee_pose_desired(2,0) = command_pose_kdl_frame.p[2];
+    ee_pose_desired(0, 0) = commandPose.position.x;
+    ee_pose_desired(1, 0) = commandPose.position.y;
+    ee_pose_desired(2, 0) = commandPose.position.z;
 
-    // KDL::Rotation desired_rotation = KDL::Rotation::Quaternion(commandPose.orientation.x,
-                                                               // commandPose.orientation.y,
-                                                               // commandPose.orientation.z,
-                                                               // commandPose.orientation.w);
-
-    KDL::Rotation desired_rotation = command_pose_kdl_frame.M;
-
-
-    geometry_msgs::PoseStamped commandPoseMsg;
-    commandPoseMsg.pose.position.x = command_pose_kdl_frame.p[0];
-    commandPoseMsg.pose.position.y = command_pose_kdl_frame.p[1];
-    commandPoseMsg.pose.position.z = command_pose_kdl_frame.p[2];
-    command_pose_kdl_frame.M.GetQuaternion(commandPoseMsg.pose.orientation.x, commandPoseMsg.pose.orientation.y, commandPoseMsg.pose.orientation.z, commandPoseMsg.pose.orientation.w);
-    commandPoseMsg.header.frame_id = "right_base_link";
-
-    ROS_ERROR_THROTTLE(0.5, "before %u %u", clutching, receivedTarget);
-    target_pub.publish(commandPoseMsg);
-    ROS_ERROR_THROTTLE(0.5, "after %u %u", clutching, receivedTarget);
-
-    // desired_rotation = desired_rotation * zeroFrame.M.Inverse();
+    KDL::Rotation desired_rotation = KDL::Rotation::Quaternion(commandPose.orientation.x,
+                                                               commandPose.orientation.y,
+                                                               commandPose.orientation.z,
+                                                               commandPose.orientation.w
+                                                               );
 
     // ROS_ERROR("%f command rot x",commandPose.orientation.x);
     // ROS_ERROR("%f command rot y",commandPose.orientation.y);
@@ -235,152 +209,149 @@ public:
 
     // ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
 
+    for (int j = 0; j < 60; j++)
+    {
+      int status = fksolver1.JntToCart(jointInverseKin, cartpos);
+      // ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
+      jacSolver.JntToJac(jointInverseKin, jacobian, -1);
+
+      Eigen::Matrix<double,6,Eigen::Dynamic> jacPos(6,nj);
+
+      for (unsigned int joint = 0; joint < nj; joint++) {
+        for (unsigned int index = 0; index < 6; index ++) {
+          jacPos(index,joint) = jacobian(index,joint);
+          // ROS_ERROR("jacobian %d, %d = %f", index, joint, jacPos(index,joint));
+        }
+      }
+
+      Eigen::Matrix<double,3, Eigen::Dynamic> ee_pose_cur(3,1);
+      for (int i = 0; i < 3; i ++) {
+        ee_pose_cur(i, 0) = cartpos.p.data[i];
+      }
+      // ROS_ERROR("%f ee_pose_cur, %d",ee_pose_cur(1,0), 1);
+
+      KDL::Rotation rotation_difference = desired_rotation * cartpos.M.Inverse();
+      KDL::Vector rotation_difference_vec = rotation_difference.GetRot();
+      if(j == 0){
+        ROS_DEBUG_THROTTLE(1, "%f rot_difference", rotation_difference_vec[0]);
+      }
+
+      Eigen::Matrix<double, 3, Eigen::Dynamic> pose_difference = ee_pose_desired - ee_pose_cur;
+
+      Eigen::Matrix<double, 6, Eigen::Dynamic> deltaX(6,1);
+      //deltaX(0, 0) = 0;
+      //deltaX(1, 0) = 0;
+      //deltaX(2, 0) = 0;
+      deltaX(0, 0) = pose_difference(0, 0);
+      deltaX(1, 0) = pose_difference(1, 0);
+      deltaX(2, 0) = pose_difference(2, 0);
+      // deltaX(3, 0) = 0;
+      // deltaX(4, 0) = 0;
+      // deltaX(5, 0) = 0;
+      double rot_adj = 0.1;
+      deltaX(3, 0) = rot_adj * rotation_difference_vec(0);
+      deltaX(4, 0) = rot_adj * rotation_difference_vec(1);
+      deltaX(5, 0) = rot_adj * rotation_difference_vec(2);
+
+      Eigen::MatrixXd deltaJoint = jacPos.transpose() * deltaX;
+
+      double alpha = 1.0;
+      if (j > 30){
+        alpha = 0.3;
+      } else {
+        alpha = 0.05;
+      }
+      for (int k = 0; k < nj; k++) {
+        jointInverseKin(k) = alpha * deltaJoint(k,0) + jointInverseKin(k);
+      }
+
+      // null space posture control
+      if (posture_control) {
+        Eigen::Matrix<double, Eigen::Dynamic, 1>  posture_error(nj,1);
+        for (int i = 0; i < nj; i++) {
+          posture_error(i, 0) = posture_target[i] - jointInverseKin(i);
+        }
+        Eigen::Matrix<double, 6, Eigen::Dynamic>  jacobian_eig(6, nj);
+
+        for (int i = 0; i < 6; i++) {
+          for (int r = 0; r < nj; j++) {
+            jacobian_eig(i, r) = jacobian(i, r);
+          }
+        }
+
+        Eigen::Matrix<double, Eigen::Dynamic, 6>  jacobian_pinv = pseudoinverse(jacobian_eig, 0.00000001);
+
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  I_nj(nj, nj);
+        I_nj.setIdentity();
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  nullspace_proj = I_nj - jacobian_pinv * jacobian_eig;
+        Eigen::Matrix<double, Eigen::Dynamic, 1> posture_error_proj = nullspace_proj * (posture_gain * posture_error);
+        for(int i = 0; i < nj; i++) {
+          jointInverseKin(i) = alpha * posture_error_proj(i, 0) + jointInverseKin(i);
+        }
+      }
+      // end posture control stuff
+
+
+
+      // ROS_INFO("joint inverse kin: %f, %f, %f, %f", jointInverseKin(0), jointInverseKin(1), jointInverseKin(2), jointInverseKin(3));
+      // ROS_INFO("deltaJoint: %f, %f, %f, %f", deltaJoint(0), deltaJoint(1, 0), deltaJoint(2, 0), deltaJoint(3, 0));
+    }
+
     std_msgs::Float64MultiArray commandMsg;
-    if (receivedTarget && clutching) {
-
-      for (int j = 0; j < 60; j++)
-      {
-        int status = fksolver1.JntToCart(jointInverseKin, cartpos);
-        // ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
-        jacSolver.JntToJac(jointInverseKin, jacobian, -1);
-
-        Eigen::Matrix<double,6,Eigen::Dynamic> jacPos(6,nj);
-
-        for (unsigned int joint = 0; joint < nj; joint++) {
-          for (unsigned int index = 0; index < 6; index ++) {
-            jacPos(index,joint) = jacobian(index,joint);
-            // ROS_ERROR("jacobian %d, %d = %f", index, joint, jacPos(index,joint));
-          }
+    if (receivedVisualTarget && command_label == 25){ for (int i = 0; i < nj; i++) {
+          commandMsg.data.push_back(jointInverseKin(i));
         }
-
-        Eigen::Matrix<double,3, Eigen::Dynamic> ee_pose_cur(3,1);
-        for (int i = 0; i < 3; i ++) {
-          ee_pose_cur(i, 0) = cartpos.p.data[i];
-        }
-        // ROS_ERROR("%f ee_pose_cur, %d",ee_pose_cur(1,0), 1);
-
-        KDL::Rotation rotation_difference = desired_rotation * cartpos.M.Inverse();
-        KDL::Vector rotation_difference_vec = rotation_difference.GetRot();
-        if(j == 0){
-          ROS_DEBUG_THROTTLE(1, "%f rot_difference", rotation_difference_vec[0]);
-        }
-
-        Eigen::Matrix<double, 3, Eigen::Dynamic> pose_difference = ee_pose_desired - ee_pose_cur;
-
-        Eigen::Matrix<double, 6, Eigen::Dynamic> deltaX(6,1);
-        //deltaX(0, 0) = 0;
-        //deltaX(1, 0) = 0;
-        //deltaX(2, 0) = 0;
-        deltaX(0, 0) = pose_difference(0, 0);
-        deltaX(1, 0) = pose_difference(1, 0);
-        deltaX(2, 0) = pose_difference(2, 0);
-        // deltaX(3, 0) = 0;
-        // deltaX(4, 0) = 0;
-        // deltaX(5, 0) = 0;
-        double rot_adj = 0.1;
-        deltaX(3, 0) = rot_adj * rotation_difference_vec(0);
-        deltaX(4, 0) = rot_adj * rotation_difference_vec(1);
-        deltaX(5, 0) = rot_adj * rotation_difference_vec(2);
-
-        Eigen::MatrixXd deltaJoint = jacPos.transpose() * deltaX;
-
-        double alpha = 1.0;
-        if (j > 30){
-          alpha = 0.3;
-        } else {
-          alpha = 0.05;
-        }
-        for (int k = 0; k < nj; k++) {
-          jointInverseKin(k) = alpha * deltaJoint(k,0) + jointInverseKin(k);
-        }
-
-        // null space posture control
-        if (posture_control) {
-          Eigen::Matrix<double, Eigen::Dynamic, 1>  posture_error(nj,1);
-          for (int i = 0; i < nj; i++) {
-            posture_error(i, 0) = posture_target[i] - jointInverseKin(i);
-          }
-          Eigen::Matrix<double, 6, Eigen::Dynamic>  jacobian_eig(6, nj);
-
-          for (int i = 0; i < 6; i++) {
-            for (int r = 0; r < nj; j++) {
-              jacobian_eig(i, r) = jacobian(i, r);
-            }
-          }
-
-          Eigen::Matrix<double, Eigen::Dynamic, 6>  jacobian_pinv = pseudoinverse(jacobian_eig, 0.00000001);
-
-          Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  I_nj(nj, nj);
-          I_nj.setIdentity();
-          Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  nullspace_proj = I_nj - jacobian_pinv * jacobian_eig;
-          Eigen::Matrix<double, Eigen::Dynamic, 1> posture_error_proj = nullspace_proj * (posture_gain * posture_error);
-          for(int i = 0; i < nj; i++) {
-            jointInverseKin(i) = alpha * posture_error_proj(i, 0) + jointInverseKin(i);
-          }
-        }
-        // end posture control stuff
-
-        // ROS_INFO("joint inverse kin: %f, %f, %f, %f", jointInverseKin(0), jointInverseKin(1), jointInverseKin(2), jointInverseKin(3));
-        // ROS_INFO("deltaJoint: %f, %f, %f, %f", deltaJoint(0), deltaJoint(1, 0), deltaJoint(2, 0), deltaJoint(3, 0));
-      }
-      for (int i = 0; i < nj; i++) {
-        commandMsg.data.push_back(jointInverseKin(i));
-      }
       pub.publish(commandMsg);
-      ROS_ERROR_THROTTLE(0.5, "hey %u %u", clutching, receivedTarget);
-    } else {
-      zeroFrame.M = KDL::Rotation::Quaternion(commandPose.orientation.x,
-                                              commandPose.orientation.y,
-                                              commandPose.orientation.z,
-                                              commandPose.orientation.w);
-
-      zeroFrame.p = KDL::Vector(commandPose.position.x,
-                                commandPose.position.y,
-                                commandPose.position.z);
-
-      zeroFrame = cartpos.Inverse() * zeroFrame;
-      // zeroFrame.M = cartpos.M.Inverse() * zeroFrame.M;
-      // zeroFrame.p = zeroFrame.p - cartpos.p;
-      // KDL::Frame controllerFrame(R, V);
-
+    }
+    else {
       for(int i = 0; i < nj; i++) {
         commandMsg.data.push_back(jointPositions(i));
         // ROS_INFO("publish command pre %d, %f", i, commandMsg.data[i]);
       }
       pub.publish(commandMsg);
+      //ROS_INFO("have not received visual target yet, publishing current joint position as target. command_label=%d receivedVisualTarget=%d", command_label, (int) receivedVisualTarget);
+    }
+  }
+
+
+  void visualCallback(const visualization_msgs::InteractiveMarkerFeedback msg)
+  {
+    if (!receivedVisualTarget){
+      receivedVisualTarget = true;
+    }
+    if (strcmp(msg.marker_name.c_str(), visualizer.c_str()) == 0) {
+      commandPose = msg.pose;
     }
   }
 
   void controllerPoseCallback(const geometry_msgs::PoseStamped msg)
   {
-    if (!receivedTarget){
-      receivedTarget = true;
+    if (!receivedVisualTarget){
+      receivedVisualTarget = true;
     }
     commandPose = msg.pose;
   }
 
-  void clutchCallback(const std_msgs::Bool msg)
+  void commandCallback(const std_msgs::Int32 msg)
   {
-    clutching = msg.data;
+     command_label = msg.data;
   }
 
 
 private:
   ros::NodeHandle n_;
   ros::Publisher pub;
-  ros::Publisher target_pub;
   ros::Publisher arrowPub;
   ros::Subscriber subJoint;
+  ros::Subscriber subVisual;
   ros::Subscriber subController;
   ros::Subscriber subCommand;
-  ros::Subscriber subClutch;
   geometry_msgs::Pose commandPose;
   visualization_msgs::Marker marker;
   visualization_msgs::Marker markerRot;
-  KDL::Frame zeroFrame;
   std::vector<std::string> joint_names;
-  bool receivedTarget;
-  bool clutching;
+  bool receivedVisualTarget;
+  int command_label;
   int nj;
   int total_joints;
 
@@ -398,20 +369,20 @@ int main(int argc, char** argv)
   ros::NodeHandle node;
   std::string robot_desc_string;
 
-  node.getParam("robot_description", robot_desc_string);
+  node.getParam("robot_dyn_description", robot_desc_string);
 
   if(!kdl_parser::treeFromString(robot_desc_string, my_tree)){
     ROS_ERROR("Failed to contruct kdl tree");
     return false;
   }
   std::string end_tracker_link;
-  if (!node.getParam("blue_hardware/endlink",  end_tracker_link)) {
-    ROS_ERROR("No blue_hardware/endlink_tracker loaded in rosparam");
+  if (!node.getParam("/blue_hardware/endlink",  end_tracker_link)) {
+    ROS_ERROR("No /blue_hardware/endlink_tracker loaded in rosparam");
     return false;
   }
   std::string base_link;
-  if (!node.getParam("blue_hardware/baselink",  base_link)) {
-    ROS_ERROR("No blue_hardware/endlink_tracker loaded in rosparam");
+  if (!node.getParam("/blue_hardware/baselink",  base_link)) {
+    ROS_ERROR("No /blue_hardware/endlink_tracker loaded in rosparam");
     return false;
   }
 
