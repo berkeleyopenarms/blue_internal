@@ -1,0 +1,5 @@
+<launch>
+
+  <include file="$(find blue_vive)/launch/include/teleop.launch.xml" ns="right_arm" />
+
+</launch>

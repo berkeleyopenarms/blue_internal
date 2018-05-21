@@ -47,7 +47,7 @@ public:
 
     receivedVisualTarget = false;
     pub = n_.advertise<std_msgs::Float64MultiArray>("blue_controllers/joint_position_controller/command", 1000);
-    subJoint = n_.subscribe("joint_states", 1000, &SubscribeAndPublish::jointCallback, this);
+    subJoint = n_.subscribe("/joint_states", 1000, &SubscribeAndPublish::jointCallback, this);
     // subVisual = n_.subscribe("/basic_controls/feedback", 1000, &SubscribeAndPublish::visualCallback, this);
     subController = n_.subscribe("controller_pose", 1000, &SubscribeAndPublish::controllerPoseCallback, this);
     subCommand = n_.subscribe("command_label", 1000, &SubscribeAndPublish::commandCallback, this);
@@ -118,7 +118,7 @@ public:
         if (msg.name[index].compare(joint_names[i]) == 0) {
           jointPositions(i) = msg.position[index];
           break;
-        } else if (index == nj - 1){
+        } else if (index == total_joints - 1){
            ROS_ERROR_THROTTLE(10 , "No joint %s for controller", msg.name[i].c_str());
         }
       }
@@ -317,7 +317,7 @@ public:
         // ROS_INFO("publish command pre %d, %f", i, commandMsg.data[i]);
       }
       pub.publish(commandMsg);
-      //ROS_INFO("have not received visual target yet, publishing current joint position as target. command_label=%d receivedVisualTarget=%d", command_label, (int) receivedVisualTarget);
+      // ROS_INFO_THROTTLE(0.5, "have not received visual target yet, publishing current joint position as target. command_label=%d receivedVisualTarget=%d", command_label, (int) receivedVisualTarget);
     }
   }
 
@@ -383,7 +383,7 @@ int main(int argc, char** argv)
   ros::NodeHandle node;
   std::string robot_desc_string;
 
-  node.getParam("robot_description", robot_desc_string);
+  node.getParam("/robot_description", robot_desc_string);
 
   if(!kdl_parser::treeFromString(robot_desc_string, my_tree)){
     ROS_ERROR("Failed to contruct kdl tree");
