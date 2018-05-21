@@ -1,0 +1,17 @@
+<launch>
+  <arg name="side" doc="Side of the robot: left or right" />
+
+  <group ns="$(arg side)_arm" clear_params="true">
+
+    <!-- Load configuration -->
+    <rosparam
+      file="$(find blue_bringup)/config/robot_parameters_$(arg side).yaml"
+      command="load" />
+
+    <!-- load controllers control stack -->
+    <include
+      file="$(find blue_bringup)/config/controllers.xml"
+      pass_all_args="true" />
+
+  </group>
+</launch>
