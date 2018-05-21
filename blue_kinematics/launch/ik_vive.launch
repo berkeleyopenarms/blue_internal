@@ -1,0 +1,21 @@
+<launch>
+  <group ns="right_arm" clear_params="true">
+    <!-- Use global URDF -->
+    <remap
+      from="robot_description"
+      to="/robot_description" />
+
+    <!-- Load configuration -->
+    <rosparam
+      file="$(find blue_bringup)/config/right_robot_parameters.yaml"
+      command="load" />
+
+    <node
+      name="pose_ik"
+      pkg="blue_kinematics"
+      type="ik_vive_posture"
+      output="screen"/>
+
+
+  </group>
+</launch>

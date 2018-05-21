@@ -16,7 +16,7 @@ cmd_label = 0
 
 class GripperClient(object):
     def __init__(self):
-        ns = '/blue_controllers/' + 'gripper_controller/'
+        ns = 'blue_controllers/' + 'gripper_controller/'
         self._client = actionlib.SimpleActionClient(
             ns + "gripper_cmd",
             GripperCommandAction,
@@ -29,7 +29,7 @@ class GripperClient(object):
             rospy.signal_shutdown("Action Server not found")
             sys.exit(1)
         self.clear()
-        rospy.Subscriber("/right_trigger", Float32, self.goal_callback, queue_size=1)
+        rospy.Subscriber("trigger", Float32, self.goal_callback, queue_size=1)
 
     def command(self, position, effort):
         self._goal.command.position = position
@@ -57,20 +57,19 @@ class GripperClient(object):
 def command_callback(msg):
     global command_publisher
     global cmd_label
-    if cmd_label == 25:
+    if cmd_label == 1:
         command_publisher.publish(msg)
 
 def label_callback(msg):
     global cmd_label
     cmd_label = msg.data
-    print(cmd_label)
 
 def main():
     global command_publisher
     rospy.init_node("gripper_action_client")
-    command_publisher = rospy.Publisher("/blue_controllers/cartesian_pose_controller/command", PoseStamped, queue_size=1)
-    rospy.Subscriber("/right_controller_pose", PoseStamped, command_callback, queue_size=1)
-    rospy.Subscriber("/command_label", Int32, label_callback, queue_size=1)
+    command_publisher = rospy.Publisher("blue_controllers/cartesian_pose_controller/command", PoseStamped, queue_size=1)
+    rospy.Subscriber("controller_pose", PoseStamped, command_callback, queue_size=1)
+    rospy.Subscriber("command_label", Int32, label_callback, queue_size=1)
 
     gc = GripperClient()
     gc.clear()
