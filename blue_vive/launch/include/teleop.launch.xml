@@ -1,0 +1,25 @@
+<launch>
+
+  <!-- VR teleop nodes -->
+  <node
+    name="vive_pose_ik"
+    pkg="blue_kinematics"
+    type="ik_vive_posture" />
+  <node
+    name="vive_gripper"
+    pkg="blue_vive"
+    type="vive_teleop.py" />
+
+  <!-- Start necessary controllers -->
+  <node
+    name="$(anon blue_controller_spawner)"
+    pkg="blue_controller_manager"
+    type="spawner.py"
+    output="screen">
+    <rosparam param="start_controllers">
+      - blue_controllers/gripper_controller
+      - blue_controllers/joint_position_controller
+    </rosparam>
+  </node>
+
+</launch>

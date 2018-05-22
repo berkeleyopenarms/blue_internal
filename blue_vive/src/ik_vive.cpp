@@ -262,7 +262,7 @@ int main(int argc, char** argv)
   ros::NodeHandle node;
   std::string robot_desc_string;
 
-  node.getParam("robot_description", robot_desc_string);
+  node.getParam("/robot_description", robot_desc_string);
 
   if(!kdl_parser::treeFromString(robot_desc_string, my_tree)){
     ROS_ERROR("Failed to contruct kdl tree");
