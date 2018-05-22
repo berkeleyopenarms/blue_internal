@@ -63,6 +63,4 @@
     <!-- type="rqt_plot" -->
     <!-- args="/blue_gazebo/simple_controller/command/data[2]" /> -->
 
-
-
 </launch>

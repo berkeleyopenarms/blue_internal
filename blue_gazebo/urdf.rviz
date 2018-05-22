@@ -6,14 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
-        - /RobotModel1/Links1
-        - /RobotModel1/Links1/base_link1
-        - /RobotModel1/Links1/base_link1/Position1
-        - /RobotModel1/Links1/world1
         - /InteractiveMarkers1
-        - /TF1
         - /TF1/Frames1
+        - /InteractiveMarkers2
       Splitter Ratio: 0.475445986
     Tree Height: 775
   - Class: rviz/Selection
@@ -63,7 +58,7 @@ Visualization Manager:
       Links:
         All Links Enabled: true
         Expand Joint Details: false
-        Expand Link Details: true
+        Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
         base_link:
@@ -187,7 +182,7 @@ Visualization Manager:
       Show Axes: false
       Show Descriptions: true
       Show Visual Aids: false
-      Update Topic: /basic_controls/update
+      Update Topic: /left_arm/cartesian_pose_teleop/update
       Value: true
     - Class: rviz/TF
       Enabled: true
@@ -197,47 +192,47 @@ Visualization Manager:
         base_footprint:
           Value: false
         base_link:
-          Value: true
+          Value: false
         camera_link:
-          Value: true
+          Value: false
         camera_view_link:
-          Value: true
+          Value: false
         left_base_link:
-          Value: true
+          Value: false
         left_elbow_lift_link:
-          Value: true
+          Value: false
         left_elbow_roll_link:
-          Value: true
+          Value: false
         left_end_roll_link:
-          Value: true
+          Value: false
         left_gripper_link:
-          Value: true
+          Value: false
         left_shoulder_lift_link:
-          Value: true
+          Value: false
         left_shoulder_roll_link:
-          Value: true
+          Value: false
         left_wrist_lift_link:
-          Value: true
+          Value: false
         left_wrist_roll_link:
-          Value: true
+          Value: false
         right_base_link:
-          Value: true
+          Value: false
         right_elbow_lift_link:
-          Value: true
+          Value: false
         right_elbow_roll_link:
-          Value: true
+          Value: false
         right_end_roll_link:
-          Value: true
+          Value: false
         right_gripper_link:
-          Value: true
+          Value: false
         right_shoulder_lift_link:
-          Value: true
+          Value: false
         right_shoulder_roll_link:
-          Value: true
+          Value: false
         right_wrist_lift_link:
-          Value: true
+          Value: false
         right_wrist_roll_link:
-          Value: true
+          Value: false
         world:
           Value: false
       Marker Scale: 1
@@ -275,11 +270,20 @@ Visualization Manager:
                               {}
       Update Interval: 0
       Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: true
+      Show Descriptions: true
+      Show Visual Aids: true
+      Update Topic: /right_arm/cartesian_pose_teleop/update
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: world
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -300,25 +304,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.00999999978
+      Distance: 1.3923738
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.578091085
-        Y: -0.559135556
-        Z: 2.34915209
+        X: 0.925784767
+        Y: -1.10362482
+        Z: 1.67574298
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.924796402
+      Pitch: 0.749796391
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.51921082
+      Yaw: 5.0392108
     Saved: ~
 Window Geometry:
   Displays:

@@ -2,6 +2,13 @@
   <arg name="side" doc="Side of the robot: left or right" />
 
   <group ns="$(arg side)_arm" clear_params="true">
+    <!-- Use global URDF and joint states -->
+    <remap
+      from="robot_description"
+      to="/robot_description" />
+    <remap
+      from="joint_states"
+      to="/joint_states" />
 
     <!-- Load configuration -->
     <rosparam
@@ -13,5 +20,25 @@
       file="$(find blue_bringup)/config/controllers.xml"
       pass_all_args="true" />
 
+    <!-- visual controller -->
+    <node
+      name="visual_contrller_node"
+      pkg="blue_misc"
+      type="visual_controller"
+      args="$(arg side)_end_roll_link"/>
+
+    <!-- pose to target conversion -->
+    <node
+      name="ik_target"
+      pkg="blue_kinematics"
+      type="ik_vive_posture" />
+
+    <!-- Publish command label 1-->
+    <node
+      name="command_label_publisher"
+      pkg="rostopic"
+      type="rostopic"
+      args="pub -r 10 command_label std_msgs/Int32 'data: 1'"/>
   </group>
+
 </launch>

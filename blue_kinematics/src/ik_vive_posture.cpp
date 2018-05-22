@@ -110,6 +110,7 @@ public:
 
   void jointCallback(const sensor_msgs::JointState msg)
   {
+  // ROS_ERROR_THROTTLE(1, "Joint Callback");
     // unsigned int nj = my_tree.getNrOfJoints();
     KDL::JntArray jointPositions = KDL::JntArray(nj);
 
@@ -207,9 +208,9 @@ public:
     // }
     // ROS_ERROR("desired position: %f, %f, %f", ee_pose_desired(0), ee_pose_desired(1), ee_pose_desired(2));
 
-    ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
+    // ROS_ERROR_THROTTLE(1, "%f command rot w",commandPose.orientation.w);
 
-    for (int j = 0; j < 40; j++)
+    for (int j = 0; j < 60; j++)
     {
       int status = fksolver1.JntToCart(jointInverseKin, cartpos);
       // ROS_ERROR("cartpos: %f, %f, %f", cartpos.p.data[0], cartpos.p.data[1], cartpos.p.data[2]);
@@ -272,6 +273,7 @@ public:
       }
 
       // null space posture control
+      // ROS_ERROR_THROTTLE(1, "pre posture %d", j);
       if (posture_control) {
         Eigen::Matrix<double, Eigen::Dynamic, 1>  posture_error(nj,1);
         for (int i = 0; i < nj; i++) {
@@ -280,7 +282,7 @@ public:
         Eigen::Matrix<double, 6, Eigen::Dynamic>  jacobian_eig(6, nj);
 
         for (int i = 0; i < 6; i++) {
-          for (int r = 0; r < nj; j++) {
+          for (int r = 0; r < nj; r++) {
             jacobian_eig(i, r) = jacobian(i, r);
           }
         }
@@ -292,8 +294,9 @@ public:
         Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  nullspace_proj = I_nj - jacobian_pinv * jacobian_eig;
         Eigen::Matrix<double, Eigen::Dynamic, 1> posture_error_proj = nullspace_proj * (posture_gain * posture_error);
         for(int i = 0; i < nj; i++) {
-          jointInverseKin(i) = alpha * posture_error_proj(i, 0) + jointInverseKin(i);
+          jointInverseKin(i) = 0.0001 * alpha * posture_error_proj(i, 0) + jointInverseKin(i);
         }
+        ROS_ERROR_THROTTLE(1, "post addition %d", j);
       }
       // end posture control stuff
 
@@ -305,10 +308,14 @@ public:
     }
 
     std_msgs::Float64MultiArray commandMsg;
-    if (receivedVisualTarget && command_label == 1){ for (int i = 0; i < nj; i++) {
-          commandMsg.data.push_back(jointInverseKin(i));
-          // ROS_ERROR("published command %d, %f", i, commandMsg.data[i]);
-        }
+    ROS_ERROR_THROTTLE(1, "pre publish ");
+    if (receivedVisualTarget && command_label == 1)
+    {
+      for (int i = 0; i < nj; i++) {
+        commandMsg.data.push_back(jointInverseKin(i));
+        ROS_ERROR_THROTTLE(1, "published command %d, %f", i, commandMsg.data[i]);
+      }
+      // ROS_ERROR("published command %d, %f", i, commandMsg.data[i]);
       pub.publish(commandMsg);
     }
     else {

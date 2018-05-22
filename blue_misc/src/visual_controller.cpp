@@ -12,6 +12,7 @@ using namespace visualization_msgs;
 // %Tag(vars)%
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 ros::Publisher pose_pub;
+ros::Publisher controller_pub;
 interactive_markers::MenuHandler menu_handler;
 // %EndTag(vars)%
 
@@ -69,6 +70,7 @@ void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr
       p.header = feedback->header;
       p.pose = feedback->pose;
       pose_pub.publish(p);
+      controller_pub.publish(p);
       break;
 
     default:
@@ -85,7 +87,7 @@ void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr
 void make6DofMarker(bool fixed, unsigned int interaction_mode, const tf::Vector3& position, bool show_6dof)
 {
   InteractiveMarker int_marker;
-  int_marker.header.frame_id = "world";
+  int_marker.header.frame_id = "base_link";
   tf::pointTFToMsg(position, int_marker.pose.position);
   int_marker.scale = .15;
 
@@ -181,17 +183,22 @@ int main(int argc, char** argv)
   menu_handler.insert(sub_menu_handle, "First Entry", &processFeedback);
   menu_handler.insert(sub_menu_handle, "Second Entry", &processFeedback);
 
-  pose_pub = n.advertise<geometry_msgs::PoseStamped>("/blue_controllers/cartesian_pose_controller/command", 1);
+  pose_pub = n.advertise<geometry_msgs::PoseStamped>("blue_controllers/cartesian_pose_controller/command", 1);
+  controller_pub = n.advertise<geometry_msgs::PoseStamped>("controller_pose", 1);
 
   tf::TransformListener listener(n);
   ros::Duration(5).sleep();
   // TODO: parameterize, add support for two arms
-  while(!listener.canTransform("world", "wrist_roll_link", ros::Time(0))) {
-    ROS_INFO("Waiting for world->wrist_roll_link transform...");
+  if (argc <=  1){
+    ROS_FATAL("Need to input joint endlink");
+  }
+
+  while(!listener.canTransform("base_link", argv[1], ros::Time(0))) {
+    ROS_INFO("Waiting for base_link->endlink transform...");
     ros::Duration(1).sleep();
   }
   tf::StampedTransform end_effector_position;
-  listener.lookupTransform("world", "wrist_roll_link", ros::Time(0), end_effector_position);
+  listener.lookupTransform("base_link", argv[1], ros::Time(0), end_effector_position);
 
   make6DofMarker(false, visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, end_effector_position.getOrigin(), true);
 
