@@ -12,7 +12,6 @@ using namespace visualization_msgs;
 // %Tag(vars)%
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 ros::Publisher pose_pub;
-ros::Publisher controller_pub;
 interactive_markers::MenuHandler menu_handler;
 std::string baselink;
 std::string endlink;
@@ -72,7 +71,6 @@ void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr
       p.header = feedback->header;
       p.pose = feedback->pose;
       pose_pub.publish(p);
-      controller_pub.publish(p);
       break;
 
     default:
@@ -186,7 +184,6 @@ int main(int argc, char** argv)
   menu_handler.insert(sub_menu_handle, "Second Entry", &processFeedback);
 
   pose_pub = n.advertise<geometry_msgs::PoseStamped>("pose_target/command", 1);
-  controller_pub = n.advertise<geometry_msgs::PoseStamped>("controller_pose", 1);
 
   tf::TransformListener listener(n);
   ros::Duration(5).sleep();

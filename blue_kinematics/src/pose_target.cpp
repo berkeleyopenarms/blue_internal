@@ -65,7 +65,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
         break;
       }
       if (j == msg.name.size() - 1) {
-        ROS_ERROR("Could not find %s in joint_states message", msg.name[i].c_str());
+        return;
       }
     }
   }
