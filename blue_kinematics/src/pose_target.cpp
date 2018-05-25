@@ -37,16 +37,16 @@ std::vector<double> posture_weights;
 Eigen::MatrixXd pseudoinverse(const Eigen::MatrixXd &mat, double tolerance)
 {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd = mat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
-    const Eigen::MatrixXd &singularValues = svd.singularValues();
-    Eigen::Matrix<double, Eigen::MatrixXd::ColsAtCompileTime, Eigen::MatrixXd::RowsAtCompileTime> singularValuesInv(mat.cols(), mat.rows());
-    singularValuesInv.setZero();
-    for (unsigned int i = 0; i < singularValues.size(); i++) {
-        if (singularValues(i) > tolerance)
-            singularValuesInv(i, i) = 1 / singularValues(i);
+    const Eigen::MatrixXd &singular_values = svd.singularValues();
+    Eigen::Matrix<double, Eigen::MatrixXd::ColsAtCompileTime, Eigen::MatrixXd::RowsAtCompileTime> singular_values_inv(mat.cols(), mat.rows());
+    singular_values_inv.setZero();
+    for (unsigned int i = 0; i < singular_values.size(); i++) {
+        if (singular_values(i) > tolerance)
+            singular_values_inv(i, i) = 1 / singular_values(i);
         else
-            singularValuesInv(i, i) = 0;
+            singular_values_inv(i, i) = 0;
     }
-    return svd.matrixV() * singularValuesInv * svd.matrixU().adjoint();
+    return svd.matrixV() * singular_values_inv * svd.matrixU().adjoint();
 }
 
 void jointStateCallback(const sensor_msgs::JointState msg)
