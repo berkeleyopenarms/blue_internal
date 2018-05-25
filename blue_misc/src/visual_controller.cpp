@@ -86,19 +86,19 @@ void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr
 ////////////////////////////////////////////////////////////////////////////////////
 
 // %Tag(6DOF)%
-void make6DofMarker(bool fixed, unsigned int interaction_mode, const tf::Vector3& position, bool show_6dof)
+void make6DofMarker(bool fixed, unsigned int interaction_mode, const tf::Vector3& position, tf::Quaternion orientation, bool show_6dof)
 {
   InteractiveMarker int_marker;
   int_marker.header.frame_id = baselink;
   tf::pointTFToMsg(position, int_marker.pose.position);
   int_marker.scale = .15;
 
-  int_marker.name = "simple_6dof";
-  int_marker.description = "Simple 6-DOF Control";
-  int_marker.pose.orientation.w = 0.0;
-  int_marker.pose.orientation.x = 1.0;
-  int_marker.pose.orientation.y = 1.0;
-  int_marker.pose.orientation.z = 0.0;
+  int_marker.name = "teleop_6dof";
+  int_marker.description = "6-DOF Teleop Control";
+  int_marker.pose.orientation.w = orientation.w();
+  int_marker.pose.orientation.x = orientation.x();
+  int_marker.pose.orientation.y = orientation.y();
+  int_marker.pose.orientation.z = orientation.z();
 
   // insert a box
   makeBoxControl(int_marker);
@@ -198,10 +198,10 @@ int main(int argc, char** argv)
     ROS_INFO("Waiting for %s->%s transform...", baselink.c_str(), endlink.c_str());
     ros::Duration(1).sleep();
   }
-  tf::StampedTransform end_effector_position;
-  listener.lookupTransform(baselink, endlink, ros::Time(0), end_effector_position);
+  tf::StampedTransform initial_transform;
+  listener.lookupTransform(baselink, endlink, ros::Time(0), initial_transform);
 
-  make6DofMarker(false, visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, end_effector_position.getOrigin(), true);
+  make6DofMarker(false, visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, initial_transform.getOrigin(), initial_transform.getRotation(), true);
 
   server->applyChanges();
 

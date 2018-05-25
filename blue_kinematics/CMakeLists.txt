@@ -3,6 +3,7 @@ project(blue_kinematics)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
+  urdf
   roscpp
   sensor_msgs
   std_msgs

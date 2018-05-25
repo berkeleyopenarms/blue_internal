@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <urdf/model.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
@@ -12,7 +13,8 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/jacobian.hpp>
 
-#include "blue_controllers/pseudoinverse.h"
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
 KDL::Tree kdl_tree;
 KDL::Chain kdl_chain;
@@ -26,9 +28,26 @@ KDL::Rotation target_rotation;
 
 bool started = false;
 
+std::vector<urdf::JointConstSharedPtr> joint_urdfs;
+
 std::vector<std::string> joint_names;
 std::vector<double> posture_target;
-double posture_gain;
+std::vector<double> posture_weights;
+
+Eigen::MatrixXd pseudoinverse(const Eigen::MatrixXd &mat, double tolerance)
+{
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd = mat.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
+    const Eigen::MatrixXd &singularValues = svd.singularValues();
+    Eigen::Matrix<double, Eigen::MatrixXd::ColsAtCompileTime, Eigen::MatrixXd::RowsAtCompileTime> singularValuesInv(mat.cols(), mat.rows());
+    singularValuesInv.setZero();
+    for (unsigned int i = 0; i < singularValues.size(); i++) {
+        if (singularValues(i) > tolerance)
+            singularValuesInv(i, i) = 1 / singularValues(i);
+        else
+            singularValuesInv(i, i) = 0;
+    }
+    return svd.matrixV() * singularValuesInv * svd.matrixU().adjoint();
+}
 
 void jointStateCallback(const sensor_msgs::JointState msg)
 {
@@ -55,11 +74,11 @@ void jointStateCallback(const sensor_msgs::JointState msg)
   KDL::ChainFkSolverPos_recursive fk_solver(kdl_chain);
 
   // Iteratively solve for a (regularized) IK solution
-  KDL::JntArray joint_positions_ik = KDL::JntArray(joint_positions);
-  // for (int i = 0; i < posture_target.size(); i++) {
-  //   joint_positions_ik(i) = posture_target[i];
-  // }
-  for (int i = 0; i < 100; i++) {
+  KDL::JntArray joint_positions_ik = KDL::JntArray(nj);
+  for (int i = 0; i < nj; i++)
+    joint_positions_ik(i) = 0.9 * joint_positions(i) + 0.1 * posture_target[i];
+
+  for (int i = 0; i < 40; i++) {
 
     // Compute jacobian via KDL
     KDL::Jacobian jacobian(nj);
@@ -86,9 +105,6 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     KDL::Rotation rotation_difference = target_rotation * cartesian_pose.M.Inverse();
     KDL::Vector rotation_difference_vec = rotation_difference.GetRot();
-    if(i == 0){
-      ROS_DEBUG_THROTTLE(1, "%f rot_difference", rotation_difference_vec[0]);
-    }
 
     Eigen::Matrix<double, 3, Eigen::Dynamic> position_difference = target_position - current_position;
     Eigen::Matrix<double, 6, Eigen::Dynamic> deltaX(6,1);
@@ -101,14 +117,37 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     Eigen::MatrixXd delta_joint = jacobian_eigen.transpose() * deltaX;
 
-    double alpha;
-    if (i > 20){
-      alpha = 0.02;
-    } else {
-      alpha = 0.2;
-    }
+    double alpha = i > 20 ? 0.05 : 0.5;
+
     for (int j = 0; j < nj; j++) {
-      joint_positions_ik(j) = alpha * delta_joint(j, 0) + joint_positions_ik(j);
+      joint_positions_ik(j) += alpha * delta_joint(j, 0);
+    }
+
+    // Null-space posture control
+    Eigen::Matrix<double, Eigen::Dynamic, 1>  posture_error(nj,1);
+    for (int j = 0; j < nj; j++) {
+      posture_error(j, 0) = posture_weights[j] * (posture_target[j] - joint_positions_ik(j));
+    }
+    Eigen::Matrix<double, Eigen::Dynamic, 6> jacobian_pinv = pseudoinverse(jacobian_eigen, 0.000001);
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  I_nj(nj, nj);
+    I_nj.setIdentity();
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  nullspace_proj = I_nj - jacobian_pinv * jacobian_eigen;
+    Eigen::Matrix<double, Eigen::Dynamic, 1> posture_error_proj = nullspace_proj * posture_error;
+    for(int j = 0; j < nj; j++) {
+      joint_positions_ik(j) += alpha * posture_error_proj(j, 0);
+    }
+
+    // Enforce joint limits
+    for(int j = 0; j < nj; j++) {
+      double &position = joint_positions_ik(j);
+      // Check that this joint has applicable limits
+      if (joint_urdfs[j]->type == urdf::Joint::REVOLUTE || joint_urdfs[j]->type == urdf::Joint::PRISMATIC)
+      {
+        if( position > joint_urdfs[j]->limits->upper ) // above upper limnit
+          position = joint_urdfs[j]->limits->upper;
+        else if( position < joint_urdfs[j]->limits->lower ) // below lower limit
+          position = joint_urdfs[j]->limits->lower;
+      }
     }
   }
 
@@ -116,7 +155,6 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
   for (int i = 0; i < nj; i++) {
     joint_command_msg.data.push_back(joint_positions_ik(i));
-    ROS_ERROR_THROTTLE(1, "published command %d, %f", i, joint_command_msg.data[i]);
   }
   // ROS_ERROR("published command %d, %f", i, commandMsg.data[i]);
   joint_position_pub.publish(joint_command_msg);
@@ -160,6 +198,24 @@ int main(int argc, char** argv)
   getRequiredParam(node, "blue_hardware/endlink", endlink);
   getRequiredParam(node, "blue_hardware/joint_names", joint_names);
   getRequiredParam(node, "blue_hardware/posture_target", posture_target);
+  getRequiredParam(node, "blue_hardware/posture_weights", posture_weights);
+
+  urdf::Model urdf;
+  if (!urdf.initParam("robot_description"))
+  {
+    ROS_ERROR("Failed to parse urdf file");
+    return false;
+  }
+  for(unsigned int i=0; i < joint_names.size(); i++)
+  {
+    urdf::JointConstSharedPtr joint_urdf = urdf.getJoint(joint_names[i]);
+    if (!joint_urdf)
+    {
+      ROS_ERROR("Could not find joint '%s' in urdf", joint_names[i].c_str());
+      return false;
+    }
+    joint_urdfs.push_back(joint_urdf);
+  }
 
   // KDL setup
   if(!kdl_parser::treeFromString(robot_desc_string, kdl_tree)){
