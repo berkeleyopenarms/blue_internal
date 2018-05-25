@@ -21,7 +21,7 @@ ros::Publisher joint_position_pub;
 ros::Subscriber joint_state_sub;
 ros::Subscriber command_sub;
 
-Eigen::Matrix<double, 3, Eigen::Dynamic> target_position;
+Eigen::Matrix<double, 3, Eigen::Dynamic> target_position(3, 1);
 KDL::Rotation target_rotation;
 
 bool started = false;
@@ -35,37 +35,39 @@ void jointStateCallback(const sensor_msgs::JointState msg)
   if (!started)
     return;
 
-  int nj = kdl_tree.getNrOfJoints();
+  int nj = kdl_chain.getNrOfJoints();
 
   // Load joint positions into KDL
   KDL::JntArray joint_positions = KDL::JntArray(nj);
   for (int i = 0; i < nj; i++) {
-    for (int j = 0; j < nj; j++) {
+    for (int j = 0; j < msg.name.size(); j++) {
       if (msg.name[j].compare(joint_names[i]) == 0) {
         joint_positions(i) = msg.position[j];
         break;
       }
-      if (j == nj - 1) {
-         ROS_ERROR("Could not find %s in joint_states message", msg.name[i].c_str());
+      if (j == msg.name.size() - 1) {
+        ROS_ERROR("Could not find %s in joint_states message", msg.name[i].c_str());
       }
     }
   }
-
   // Build KDL solvers
   KDL::ChainJntToJacSolver jac_solver(kdl_chain);
   KDL::ChainFkSolverPos_recursive fk_solver(kdl_chain);
 
   // Iteratively solve for a (regularized) IK solution
   KDL::JntArray joint_positions_ik = KDL::JntArray(joint_positions);
-  for (int i = 0; i < 50; i++) {
+  // for (int i = 0; i < posture_target.size(); i++) {
+  //   joint_positions_ik(i) = posture_target[i];
+  // }
+  for (int i = 0; i < 100; i++) {
 
     // Compute jacobian via KDL
     KDL::Jacobian jacobian(nj);
-    if (!jac_solver.JntToJac(joint_positions_ik, jacobian, -1))
+    if (jac_solver.JntToJac(joint_positions_ik, jacobian, -1) < 0)
       ROS_ERROR("Jacobian solver failed");
 
     // Load it into Eigen
-    Eigen::Matrix<double,6,Eigen::Dynamic> jacobian_eigen(6,nj);
+    Eigen::Matrix<double, 6, Eigen::Dynamic> jacobian_eigen(6, nj);
     for (int joint = 0; joint < nj; joint++) {
       for (int dim = 0; dim < 6; dim ++) {
         jacobian_eigen(dim, joint) = jacobian(dim, joint);
@@ -74,10 +76,10 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     // Compute cartesian position via KDL
     KDL::Frame cartesian_pose;
-    if (!fk_solver.JntToCart(joint_positions_ik, cartesian_pose))
+    if (fk_solver.JntToCart(joint_positions_ik, cartesian_pose) < 0)
       ROS_ERROR("Forward kinematics failed");
 
-    Eigen::Matrix<double,3, Eigen::Dynamic> current_position(3,1);
+    Eigen::Matrix<double, 3, Eigen::Dynamic> current_position(3, 1);
     for (int dim = 0; dim < 3; dim ++) {
       current_position(dim, 0) = cartesian_pose.p.data[dim];
     }
@@ -101,7 +103,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     double alpha;
     if (i > 20){
-      alpha = 0.05;
+      alpha = 0.02;
     } else {
       alpha = 0.2;
     }
@@ -151,17 +153,20 @@ int main(int argc, char** argv)
 
   // Parameters
   std::string robot_desc_string;
+  std::string baselink;
   std::string endlink;
   getRequiredParam(node, "/robot_description", robot_desc_string);
-  getRequiredParam(node, "blue_hardware/endlink",  endlink);
+  getRequiredParam(node, "blue_hardware/baselink", baselink);
+  getRequiredParam(node, "blue_hardware/endlink", endlink);
   getRequiredParam(node, "blue_hardware/joint_names", joint_names);
+  getRequiredParam(node, "blue_hardware/posture_target", posture_target);
 
   // KDL setup
   if(!kdl_parser::treeFromString(robot_desc_string, kdl_tree)){
     ROS_ERROR("Failed to contruct kdl tree");
     return false;
   }
-  if (!kdl_tree.getChain("base_link", endlink, kdl_chain)) {
+  if (!kdl_tree.getChain(baselink, endlink, kdl_chain)) {
     ROS_ERROR("Could not get KDL chain!");
     return 1;
   }
