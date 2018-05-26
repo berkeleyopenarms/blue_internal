@@ -26,8 +26,8 @@
     output="screen">
     <rosparam param="start_controllers">
       - blue_controllers/gripper_controller
+      - blue_controllers/joint_position_controller
     </rosparam>
   </node>
-      <!-- - blue_controllers/joint_position_controller -->
 
 </launch>

@@ -1,4 +1,6 @@
 #include <ros/ros.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
 #include <urdf/model.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
@@ -22,6 +24,10 @@ KDL::Chain kdl_chain;
 ros::Publisher joint_position_pub;
 ros::Subscriber joint_state_sub;
 ros::Subscriber command_sub;
+
+std::string base_link;
+tf2_ros::Buffer* tf_buffer;
+tf2_ros::TransformListener* tf_listener;
 
 Eigen::Matrix<double, 3, Eigen::Dynamic> target_position(3, 1);
 KDL::Rotation target_rotation;
@@ -160,8 +166,12 @@ void jointStateCallback(const sensor_msgs::JointState msg)
   joint_position_pub.publish(joint_command_msg);
 }
 
-void commandCallback(const geometry_msgs::PoseStamped msg)
+void commandCallback(geometry_msgs::PoseStamped msg)
 {
+  geometry_msgs::TransformStamped t;
+  t = tf_buffer->lookupTransform(base_link, msg.header.frame_id, ros::Time(0));
+  tf2::doTransform(msg, msg, t);
+
   target_position(0, 0) = msg.pose.position.x;
   target_position(1, 0) = msg.pose.position.y;
   target_position(2, 0) = msg.pose.position.z;
@@ -189,13 +199,15 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "inverse_kin_target");
   ros::NodeHandle node;
 
+  tf_buffer = new tf2_ros::Buffer();
+  tf_listener = new tf2_ros::TransformListener(*tf_buffer);
+
   // Parameters
   std::string robot_desc_string;
-  std::string baselink;
-  std::string endlink;
+  std::string end_link;
   getRequiredParam(node, "/robot_description", robot_desc_string);
-  getRequiredParam(node, "blue_hardware/baselink", baselink);
-  getRequiredParam(node, "blue_hardware/endlink", endlink);
+  getRequiredParam(node, "blue_hardware/baselink", base_link);
+  getRequiredParam(node, "blue_hardware/endlink", end_link);
   getRequiredParam(node, "blue_hardware/joint_names", joint_names);
   getRequiredParam(node, "blue_hardware/posture_target", posture_target);
   getRequiredParam(node, "blue_hardware/posture_weights", posture_weights);
@@ -222,7 +234,7 @@ int main(int argc, char** argv)
     ROS_ERROR("Failed to contruct kdl tree");
     return false;
   }
-  if (!kdl_tree.getChain(baselink, endlink, kdl_chain)) {
+  if (!kdl_tree.getChain(base_link, end_link, kdl_chain)) {
     ROS_ERROR("Could not get KDL chain!");
     return 1;
   }
