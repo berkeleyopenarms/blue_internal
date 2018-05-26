@@ -1,20 +1,22 @@
 <launch>
 
-  <!-- VR teleop nodes -->
+  <!-- Teleop nodes -->
+  <node
+    name="vive_teleop"
+    pkg="blue_vive"
+    type="vive_teleop.py" />
+
   <node
     name="rviz_teleop"
     pkg="blue_misc"
     type="visual_controller"
     args="right_end_roll_link" />
 
+  <!-- Inverse kinematics -->
   <node
     name="pose_target"
     pkg="blue_kinematics"
     type="pose_target" />
-  <!-- <node -->
-  <!--   name="vive_gripper" -->
-  <!--   pkg="blue_vive" -->
-  <!--   type="vive_teleop.py" /> -->
 
   <!-- Start necessary controllers -->
   <node
@@ -24,8 +26,8 @@
     output="screen">
     <rosparam param="start_controllers">
       - blue_controllers/gripper_controller
-      - blue_controllers/joint_position_controller
     </rosparam>
   </node>
+      <!-- - blue_controllers/joint_position_controller -->
 
 </launch>
