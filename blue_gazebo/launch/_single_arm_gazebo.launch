@@ -21,11 +21,7 @@
     <include
       file="$(find blue_bringup)/config/controllers.xml"
       pass_all_args="true" />
-    <node
-      name="blue_controller_manager"
-      pkg="blue_controller_manager"
-      type="blue_controller_manager"
-      output="screen" />
+
     <node
       name="$(anon blue_controller_spawner)"
       pkg="blue_controller_manager"
