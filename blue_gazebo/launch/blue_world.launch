@@ -1,4 +1,12 @@
 <launch>
+
+  <remap
+    from="/left_arm/joint_states"
+    to="/joint_states" />
+  <remap
+    from="/right_arm/joint_states"
+    to="/joint_states" />
+
   <include
     file="$(find blue_descriptions)/launch/gazebo.launch" />
 
@@ -13,42 +21,10 @@
   </include>
 
   <node
-    name="controller_spawner_right"
-    pkg="controller_manager"
-    type="spawner"
-    respawn="false"
-    output="screen"
-    args="/right_arm/blue_controllers/joint_state_controller /right_arm/blue_controllers/gripper_controller /right_arm/blue_controllers/joint_position_controller"/>
-
-  <node
-    name="controller_spawner_left"
-    pkg="controller_manager"
-    type="spawner"
-    respawn="false"
-    output="screen"
-    args="/left_arm/blue_controllers/joint_state_controller /left_arm/blue_controllers/gripper_controller /left_arm/blue_controllers/joint_position_controller"/>
-
- <arg
-    name="model" />
-
-  <arg
-    name="gui"
-    default="True" />
-
-  <param
-    name="use_gui"
-    value="$(arg gui)" />
-
-  <node
     name="rviz"
     pkg="rviz"
     type="rviz"
     args="-d $(find blue_gazebo)/urdf.rviz" />
-
-  <node
-    name="gui_control"
-    pkg="rqt_gui"
-    type="rqt_gui" />
 
   <node
     name="robot_state_publisher"
