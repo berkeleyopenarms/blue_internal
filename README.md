@@ -12,10 +12,16 @@ This repository contains all of our internal software, which includes things lik
   ```bash
   # For a full robot (see README in blue_core)
   roslaunch blue_bringup full.launch
+  ```
+  ```bash
   # For a left arm
   roslaunch blue_bringup left.launch
+  ```
+  ```bash
   # For a right arm
   roslaunch blue_bringup right.launch
+  ```
+  ```bash
   # For the simulator (extremely experimental)
   roslaunch blue_gazebo blue_world.launch
   ``` 
@@ -23,8 +29,12 @@ This repository contains all of our internal software, which includes things lik
   ```bash
   # For a full robot
   roslaunch blue_teleop teleop_full.launch
+  ```
+  ```bash
   # For a left arm
   roslaunch blue_teleop teleop_left.launch
+  ```
+  ```bash
   # For a right arm
   roslaunch blue_teleop teleop_right.launch
   ``` 
