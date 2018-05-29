@@ -10,14 +10,23 @@ This repository contains all of our internal software, which includes things lik
 
 - Start the control stack, ie:
   ```bash
-  # For a real robot (see README in blue_core)
+  # For a full robot (see README in blue_core)
   roslaunch blue_bringup full.launch
+  # For a left arm
+  roslaunch blue_bringup left.launch
+  # For a right arm
+  roslaunch blue_bringup right.launch
   # For the simulator (extremely experimental)
   roslaunch blue_gazebo blue_world.launch
   ``` 
 - Start the teleop nodes:
   ```bash
+  # For a full robot
   roslaunch blue_teleop teleop_full.launch
+  # For a left arm
+  roslaunch blue_teleop teleop_left.launch
+  # For a right arm
+  roslaunch blue_teleop teleop_right.launch
   ``` 
   This should start copies of the inverse kinematics node, rviz teleop node, and Vive teleop node.
 - **(rviz teleop)** Draggable [interactive markers](http://wiki.ros.org/rviz/Tutorials/Interactive%20Markers%3A%20Getting%20Started) should now appear on the `/left_arm/cartesian_pose_teleop` and `/right_arm/cartesian_pose_teleop` namespaces in rviz. Moving these will publish 6DOF pose targets that our IK node will attempt to reach.
