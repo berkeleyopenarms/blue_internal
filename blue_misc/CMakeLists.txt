@@ -202,6 +202,3 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(visual_controller src/visual_controller.cpp)
-target_link_libraries(visual_controller ${catkin_LIBRARIES})
