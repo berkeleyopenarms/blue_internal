@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find blue_teleop)/launch/include/teleop.launch.xml" ns="right_arm" />
+  <include file="$(find blue_teleop)/launch/include/teleop.launch.xml" ns="left_arm" />
+
+</launch>
