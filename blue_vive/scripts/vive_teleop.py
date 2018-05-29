@@ -16,9 +16,8 @@ cmd_label = 0
 
 class GripperClient(object):
     def __init__(self):
-        ns = 'blue_controllers/' + 'gripper_controller/'
         self._client = actionlib.SimpleActionClient(
-            ns + "gripper_cmd",
+            "blue_controllers/gripper_controller/gripper_cmd",
             GripperCommandAction,
         )
         self._goal = GripperCommandGoal()
@@ -66,8 +65,8 @@ def label_callback(msg):
 
 def main():
     global command_publisher
-    rospy.init_node("gripper_action_client")
-    command_publisher = rospy.Publisher("blue_controllers/cartesian_pose_controller/command", PoseStamped, queue_size=1)
+    rospy.init_node("vive_teleop")
+    command_publisher = rospy.Publisher("pose_target/command", PoseStamped, queue_size=1)
     rospy.Subscriber("controller_pose", PoseStamped, command_callback, queue_size=1)
     rospy.Subscriber("command_label", Int32, label_callback, queue_size=1)
 
