@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- Teleop nodes -->
+  <node
+    name="vive_tracking"
+    pkg="blue_vive_tracking"
+    type="vive_tracking.py" />
+
+  <node
+    name="rviz_tracking"
+    pkg="blue_vive_tracking"
+    type="rviz_tracking" />
+
+</launch>
