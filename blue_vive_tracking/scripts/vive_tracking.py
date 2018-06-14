@@ -14,9 +14,8 @@ global cmd_label
 global command_publisher
 cmd_label = 0
 
-tracker_data = 0
-
 global tracker_data
+tracker_data = 0
 
 class GripperClient(object):
     def __init__(self):
@@ -67,11 +66,11 @@ def label_callback(msg):
     global cmd_label
     cmd_label = msg.data
 
-def tracking_callback(msg):   
+def tracking_callback(pos) 
     global tracker_data
-    tracker_data = msg
+    tracker_data = pos
 
-def get_vive_tracker_data()
+def get_vive_tracker_data():
     return tracker_data
 
 def main():
