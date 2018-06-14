@@ -66,27 +66,28 @@ def label_callback(msg):
     global cmd_label
     cmd_label = msg.data
 
-def tracking_callback(pos) 
-    global tracker_data
-    tracker_data = pos
+def tracking_callback(pos):
+	global tracker_data
+	tracker_data = pos
 
 def get_vive_tracker_data():
     return tracker_data
 
 def main():
-    global command_publisher
+	global command_publisher
 
-    rospy.init_node("vive_tracking")
-    
-    rospy.Subscriber("upper_arm_tracker_pose", PoseStamped, tracking_callback)
+	rospy.init_node("vive_tracking")
 
-    r = rospy.Rate(500)
-    while not rospy.is_shutdown():
-        
-        #this is where it repeats ceaselessy
-        if tracker_data != 0:
-            print(str(tracker_data.pose.position.z))
-        r.sleep()
+	rospy.Subscriber("upper_arm_tracker_pose", PoseStamped, tracking_callback)
+	
+	r = rospy.Rate(500)
+	while not rospy.is_shutdown():
+
+		#this is where it repeats ceaselessy
+		if tracker_data != 0: #this helps with debugging
+			print(tracker_data)
+			#print(str(tracker_data.pose.position.z))
+		r.sleep()
 
 if __name__ == "__main__":
     main()
