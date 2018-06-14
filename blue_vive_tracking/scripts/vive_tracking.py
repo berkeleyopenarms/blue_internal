@@ -19,9 +19,7 @@ def tracking_callback(pos):
 	tracker_data = pos
 
 class ViveTracker():
-	def get_vive_tracker_data(self):
-		print('hiya')
-		print(tracker_data)	    
+	def get_vive_tracker_data(self):   
 		return tracker_data
 
 
