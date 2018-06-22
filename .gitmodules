@@ -1,0 +1,3 @@
+[submodule "blue_benchmarking/scripts/blue_interface"]
+	path = blue_benchmarking/scripts/blue_interface
+	url = https://github.com/berkeley-open-robotics/blue_interface

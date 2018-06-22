@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- Teleop nodes -->
+  <node
+    name="control_benchmarking"
+    pkg="blue_benchmarking"
+    type="control_benchmarking.py" />
+
+  <node
+    name="rviz_show"
+    pkg="blue_benchmarking"
+    type="rviz_show" />
+
+</launch>
