@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import pickle  # will use to save data between program launches
 import sys
 import numpy as np

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import numpy as np #will use to create arrays
 import pickle #will use to save data between program launches
 import time
