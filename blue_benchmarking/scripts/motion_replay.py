@@ -9,6 +9,7 @@ from blue_interface import BlueInterface  # this is the API for the robot
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Replay a motion of a blue arm.')
+    parser.add_argument('port', type=int, help='Port that the ros web host was started on')
     parser.add_argument('record_file', type=str, help='Loads a recorded motion from this file')
     args = parser.parse_args()
     
@@ -29,7 +30,7 @@ if __name__ == '__main__':
             blue.set_joint_positions(np.array(joint_angle_list[i])) # tell the robot to go to a set of joint angles
             #blue.command_gripper(gripper_list[i], 30.0)
             if gripper_list[i] < -0.2:
-                blue.command_gripper(-1.3, 30.0)
+                blue.command_gripper(-1.3, 15.0)
             else:
                 blue.command_gripper(0, 2.0)
             time.sleep(0.02)

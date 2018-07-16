@@ -16,10 +16,10 @@ if __name__ == '__main__':
             input("Press enter to open/close the gripper. To exit, press <ctrl+c>.")
     
             if opened:
-                blue.command_gripper(-1,30.0)
+                blue.command_gripper(-1.0,10.0)
                 print("Closing...")
             else:
-                blue.command_gripper(0.0,3.0)
+                blue.command_gripper(0.0,10.0)
                 print("Opening...")
             opened = not opened
     except:
