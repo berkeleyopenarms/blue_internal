@@ -92,7 +92,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
     joint_positions_ik(i) = 0.2 * joint_positions(i) + 0.8 * posture_target[i];
     // TODO: ^consider factoring posture weights into this expression
 
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 10; i++) {
 
     // Compute jacobian via KDL
     KDL::Jacobian jacobian(nj);
@@ -131,7 +131,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     Eigen::MatrixXd delta_joint = jacobian_eigen.transpose() * deltaX;
 
-    double alpha = i > 20 ? 0.05 : 0.5;
+    double alpha = i > 5 ? 0.05 : 0.5;
 
     for (int j = 0; j < nj; j++) {
       joint_positions_ik(j) += alpha * delta_joint(j, 0);
@@ -222,9 +222,9 @@ void commandCallback(geometry_msgs::PoseStamped msg)
   t = tf_buffer->lookupTransform(base_link, msg.header.frame_id, ros::Time(0));
   tf2::doTransform(msg, msg, t);
 
-  target_position(0, 0) = msg.pose.position.x;
-  target_position(1, 0) = msg.pose.position.y;
-  target_position(2, 0) = msg.pose.position.z;
+  target_position(0, 0) = msg.pose.position.x*2;
+  target_position(1, 0) = msg.pose.position.y*2;
+  target_position(2, 0) = msg.pose.position.z*2;
   target_rotation = KDL::Rotation::Quaternion(
       msg.pose.orientation.x,
       msg.pose.orientation.y,
