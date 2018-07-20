@@ -7,9 +7,11 @@ import sys
 sys.path.append('blue_interface')
 from blue_interface import BlueInterface
 import numpy as np
+import consts
 
 if __name__ == '__main__':
-    blue = BlueInterface("right", "hekate.cs.berkeley.edu")
+    #blue = BlueInterface("left", "10.42.0.1")
+    blue = BlueInterface(consts.default_arm, consts.default_address) #creates object of class KokoInterface at the IP in quotes with the name 'blue'
     opened = True 
     try:
         while True:
