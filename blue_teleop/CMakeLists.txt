@@ -24,3 +24,6 @@ target_link_libraries(teleop_inverse_kinematics ${catkin_LIBRARIES})
 
 add_executable(rviz_teleop src/rviz_teleop.cpp)
 target_link_libraries(rviz_teleop ${catkin_LIBRARIES})
+
+add_executable(ik src/ik.cpp)
+target_link_libraries(ik ${catkin_LIBRARIES})
