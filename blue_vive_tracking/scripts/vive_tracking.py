@@ -12,7 +12,7 @@ from control_msgs.msg import (
 )
 
 #global tracker_data
-tracker_data = 1
+tracker_data = 0
 
 def tracking_callback(pos):
 	global tracker_data

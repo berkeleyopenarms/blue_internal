@@ -75,6 +75,7 @@ def main():
     gc.set_effort(2.5)
     r = rospy.Rate(500)
     while not rospy.is_shutdown():
+        gc.command(0.1, 2)
         r.sleep()
 
 if __name__ == "__main__":

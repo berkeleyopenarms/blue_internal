@@ -24,3 +24,7 @@ catkin_package()
 
 add_executable(rviz_show src/rviz_show.cpp)
 target_link_libraries(rviz_show ${catkin_LIBRARIES})
+
+#Making it executable from rosrun meakes raw_input not work. Look for future solutions.
+#catkin_install_python(PROGRAMS scripts/record_positions.py
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

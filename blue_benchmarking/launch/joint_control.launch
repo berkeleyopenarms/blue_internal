@@ -1,0 +1,25 @@
+<launch>
+
+  <!-- Launch Arm-->
+  <include file="$(find blue_bringup)/launch/right.launch" />
+
+  <!-- Joint Controller-->
+  <group ns="right_arm">
+    <node
+      name="$(anon blue_controller_spawner)"
+      pkg="blue_controller_manager"
+      type="spawner.py"
+      output="screen">
+      <rosparam param="start_controllers">
+        - blue_controllers/gripper_controller
+        - blue_controllers/joint_position_controller
+      </rosparam>
+    </node>
+  </group>
+
+  <node
+    name="gui"
+    pkg="rqt_gui"
+    type="rqt_gui" />
+
+</launch>

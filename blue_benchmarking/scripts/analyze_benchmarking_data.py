@@ -10,11 +10,11 @@ from tf.transformations import euler_from_quaternion
 
 
 
-data = pickle.load( open("benchmark_collected_data.p", "rb")) #uses the pickle function to read the binary file created in execute_benchmarking
+data = pickle.load( open("../results/benchmark_collected_data.p", "rb")) #uses the pickle function to read the binary file created in execute_benchmarking
 # This contains a list where each element of a list follows [pose_ID, robot pose, vive_measurement]
 
 def euler_from_quat(quaternion):
-    return euler_from_quaternion(quaternion)
+    return euler_from_quaternion(quaternion) # Returns in radians
 
 num_IDs = 1 #Initialize variable to hold the total number of unique position IDs
 for i in range(len(data)): #This loop finds the largest position ID and sets num_IDs equal to it
@@ -60,9 +60,9 @@ for position_ID in range(num_IDs):
         }
  
 for l in range(len(output_list)):
-    print("Pose " + str(l+1) + ": " +str(output_list[l]))
+    print "Pose %d: %s" % ((l+1), output_list[l])
 
 #CHANGE THIS: change the following to a more standard file type than pickle
-pickle.dump(output_list, open("std_data.p", "wb")) #uses the pickle function to write a binary file
+pickle.dump(output_list, open("../results/std_data.p", "wb")) #uses the pickle function to write a binary file
 print('Your data has also been saved in the directory')
 
