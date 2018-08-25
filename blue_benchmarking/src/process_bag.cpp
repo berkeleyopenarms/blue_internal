@@ -48,8 +48,7 @@ std::vector<double> posture_target;
 std::vector<double> posture_weights;
 
 
-KDL::Frame get_ee_pose(const sensor_msgs::JointState msg)
-{
+KDL::Frame get_ee_pose(const sensor_msgs::JointState msg) {
   int nj = kdl_chain.getNrOfJoints();
 
   // Load joint positions into KDL
@@ -88,7 +87,7 @@ void getRequiredParam(ros::NodeHandle &nh, const std::string name, TParam &dest)
 void process_bag(rosbag::Bag bag) {
   std::vector<std::string> topics;
   topics.push_back(std::string("/right_arm/joint_states"));
-  topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/;command"));
+  topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/command"));
   topics.push_back(std::string("/right_arm/motor_states"));
   topics.push_back(std::string("/base_tracker_link"));
 
@@ -124,12 +123,18 @@ void process_bag(rosbag::Bag bag) {
       }
 
       std_msgs::Float64MultiArray::ConstPtr j_cmd;
+      if (j_cmd != NULL) {
+        cmd_file << msg_time << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
+      }
   }
+
   bag.close();
+  ee_file.close();
+  vive_file.close();
+  cmd_file.close();
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   ros::init(argc, argv, "inverse_kin_target");
   ros::NodeHandle node;
 
@@ -145,13 +150,12 @@ int main(int argc, char** argv)
   getRequiredParam(node, "blue_hardware/joint_names", joint_names);
 
   urdf::Model urdf;
-  if (!urdf.initParam("robot_description"))
-  {
+  if (!urdf.initParam("robot_description")) {
     ROS_ERROR("Failed to parse urdf file");
     return false;
   }
-  for(unsigned int i=0; i < joint_names.size(); i++)
-  {
+
+  for(unsigned int i = 0; i < joint_names.size(); i++) {
     urdf::JointConstSharedPtr joint_urdf = urdf.getJoint(joint_names[i]);
     if (!joint_urdf)
     {
@@ -162,10 +166,11 @@ int main(int argc, char** argv)
   }
 
   // KDL setup
-  if(!kdl_parser::treeFromString(robot_desc_string, kdl_tree)){
+  if(!kdl_parser::treeFromString(robot_desc_string, kdl_tree)) {
     ROS_ERROR("Failed to contruct kdl tree");
     return false;
   }
+
   if (!kdl_tree.getChain(base_link, end_link, kdl_chain)) {
     ROS_ERROR("Could not get KDL chain!");
     return 1;
