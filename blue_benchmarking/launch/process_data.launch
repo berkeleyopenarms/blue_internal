@@ -1,0 +1,19 @@
+<launch>
+
+  <!-- Launch Arm-->
+  <param
+    name="robot_description"
+    command="$(find xacro)/xacro --inorder '$(find blue_descriptions)/robots/blue_full.urdf.xacro'" />
+
+  <rosparam
+    file="$(find blue_bringup)/config/robot_parameters_right.yaml"
+    command="load" />
+  <!-- Joint Controller-->
+  <node
+    name="process_bag"
+    pkg="blue_benchmarking"
+    type="process_bag"
+    output="screen">
+  </node>
+
+</launch>
