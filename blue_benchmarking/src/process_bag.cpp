@@ -81,6 +81,24 @@ KDL::Frame get_ee_pose(const sensor_msgs::JointState msg) {
   return cartesian_pose;
 }
 
+KDL::Frame get_ee_pose(const std_msgs::Float64MultiArray msg) {
+  int nj = kdl_chain.getNrOfJoints();
+
+  // Load joint positions into KDL
+  KDL::JntArray joint_positions = KDL::JntArray(nj);
+  for (int i = 0; i < nj; i++) {
+      joint_positions(i) = msg.data[i];
+  }
+  // Build KDL solvers
+  KDL::ChainFkSolverPos_recursive fk_solver(kdl_chain);
+
+  // Compute cartesian position via KDL
+  KDL::Frame cartesian_pose;
+  if (fk_solver.JntToCart(joint_positions, cartesian_pose) < 0)
+    ROS_ERROR("Forward kinematics failed");
+  return cartesian_pose;
+}
+
 
 
 void process_bag() {
@@ -96,10 +114,13 @@ void process_bag() {
 
   std::ofstream ee_file;
   ee_file.open ("/home/phil/ee.csv");
+  ee_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
   std::ofstream vive_file;
   vive_file.open ("/home/phil/vive.csv");
+  vive_file << "time,x,y,z,qx,qy,qz,qw" << std::endl;
   std::ofstream cmd_file;
   cmd_file.open ("/home/phil/cmd.csv");
+  cmd_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
 
   foreach(rosbag::MessageInstance const m, view) {
       ros::Time msg_time = m.getTime();
@@ -127,7 +148,17 @@ void process_bag() {
       std_msgs::Float64MultiArray::ConstPtr j_cmd_ptr = m.instantiate<std_msgs::Float64MultiArray>();
       if (j_cmd_ptr != NULL) {
         std::vector<double> j_cmd = j_cmd_ptr->data;
-        cmd_file << msg_time << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
+        KDL::Frame ee_pose = get_ee_pose(*j_cmd_ptr);
+
+        double qx;
+        double qy;
+        double qz;
+        double qw;
+        ee_pose.M.GetQuaternion(qx, qy, qz, qw);
+        cmd_file << msg_time << ',';
+        cmd_file << ee_pose.p.x() << ',' << ee_pose.p.y() << ',' << ee_pose.p.z();
+        cmd_file << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw;
+        cmd_file << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
       }
   }
 
