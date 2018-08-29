@@ -7,7 +7,8 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
 
-#include <kdl_parser/kdl_parser.hpp> #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl_parser/kdl_parser.hpp>
+#include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
@@ -19,6 +20,8 @@
 
 
 #include <rosbag/bag.h>
+#include <iostream>
+#include <fstream>
 #include <rosbag/view.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
@@ -27,10 +30,6 @@
 
 KDL::Tree kdl_tree;
 KDL::Chain kdl_chain;
-
-ros::Publisher joint_position_pub;
-ros::Subscriber joint_state_sub;
-ros::Subscriber command_sub;
 
 std::string base_link;
 tf2_ros::Buffer* tf_buffer;
@@ -47,6 +46,14 @@ std::vector<std::string> joint_names;
 std::vector<double> posture_target;
 std::vector<double> posture_weights;
 
+template <typename TParam>
+void getRequiredParam(ros::NodeHandle &nh, const std::string name, TParam &dest) {
+  if(!nh.getParam(name, dest)) {
+    ROS_FATAL("Could not find %s parameter in namespace %s", name.c_str(), nh.getNamespace().c_str());
+    ros::shutdown();
+    exit(1);
+  }
+}
 
 KDL::Frame get_ee_pose(const sensor_msgs::JointState msg) {
   int nj = kdl_chain.getNrOfJoints();
@@ -60,7 +67,7 @@ KDL::Frame get_ee_pose(const sensor_msgs::JointState msg) {
         break;
       }
       if (j == msg.name.size() - 1) {
-        return;
+        ROS_ERROR("ERRORRORORORORO");
       }
     }
   }
@@ -69,62 +76,89 @@ KDL::Frame get_ee_pose(const sensor_msgs::JointState msg) {
 
   // Compute cartesian position via KDL
   KDL::Frame cartesian_pose;
-  if (fk_solver.JntToCart(joint_positions_ik, cartesian_pose) < 0)
+  if (fk_solver.JntToCart(joint_positions, cartesian_pose) < 0)
     ROS_ERROR("Forward kinematics failed");
   return cartesian_pose;
 }
 
-template <typename TParam>
-void getRequiredParam(ros::NodeHandle &nh, const std::string name, TParam &dest) {
-  if(!nh.getParam(name, dest)) {
-    ROS_FATAL("Could not find %s parameter in namespace %s", name.c_str(), nh.getNamespace().c_str());
-    ros::shutdown();
-    exit(1);
+KDL::Frame get_ee_pose(const std_msgs::Float64MultiArray msg) {
+  int nj = kdl_chain.getNrOfJoints();
+
+  // Load joint positions into KDL
+  KDL::JntArray joint_positions = KDL::JntArray(nj);
+  for (int i = 0; i < nj; i++) {
+      joint_positions(i) = msg.data[i];
   }
+  // Build KDL solvers
+  KDL::ChainFkSolverPos_recursive fk_solver(kdl_chain);
+
+  // Compute cartesian position via KDL
+  KDL::Frame cartesian_pose;
+  if (fk_solver.JntToCart(joint_positions, cartesian_pose) < 0)
+    ROS_ERROR("Forward kinematics failed");
+  return cartesian_pose;
 }
 
 
-void process_bag(rosbag::Bag bag) {
-  std::vector<std::string> topics;
-  topics.push_back(std::string("/right_arm/joint_states"));
-  topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/command"));
-  topics.push_back(std::string("/right_arm/motor_states"));
-  topics.push_back(std::string("/base_tracker_link"));
 
+void process_bag() {
+  rosbag::Bag bag;
+  bag.open("/home/phil/bench_2018-08-25-21-17-32.bag", rosbag::bagmode::Read);
+
+  std::vector<std::string> topics;
+  topics.push_back(std::string("joint_states"));
+  topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/command"));
+  topics.push_back(std::string("/right_arm/blue_hardware/motor_states"));
+  topics.push_back(std::string("/forearm_tracker_pose"));
   rosbag::View view(bag, rosbag::TopicQuery(topics));
 
-  ofstream ee_file;
-  ee_file.open ("ee.csv");
-  ofstream vive_file;
-  vive_file.open ("vive.csv");
-  ofstream cmd_file;
-  cmd_file.open ("vive.csv");
+  std::ofstream ee_file;
+  ee_file.open ("/home/phil/ee.csv");
+  ee_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
+  std::ofstream vive_file;
+  vive_file.open ("/home/phil/vive.csv");
+  vive_file << "time,x,y,z,qx,qy,qz,qw" << std::endl;
+  std::ofstream cmd_file;
+  cmd_file.open ("/home/phil/cmd.csv");
+  cmd_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
 
   foreach(rosbag::MessageInstance const m, view) {
       ros::Time msg_time = m.getTime();
 
       sensor_msgs::JointState::ConstPtr js = m.instantiate<sensor_msgs::JointState>();
       if (js != NULL) {
-        ee_pose = get_ee_pose(js)
+        KDL::Frame ee_pose = get_ee_pose(*js);
         double qx;
         double qy;
         double qz;
         double qw;
         ee_pose.M.GetQuaternion(qx, qy, qz, qw);
-        ee_file << msg_time << ',' << ee_pose.p.x() << ',' << ee_pose.p.y() << ',' << ee_pose.p.z()
-                << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw
-                << ',' << js[0] << ',' << js[1] << ',' << js[2] << ',' << js[3] << ',' << js[4] << ',' << js[5] << ',' << js[6] << '\n';
+        ee_file << msg_time << ',';
+        ee_file << ee_pose.p.x() << ',' << ee_pose.p.y() << ',' << ee_pose.p.z();
+        ee_file << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw;
+        ee_file << ',' << (*js).position[0] << ',' << (*js).position[1] << ',' << (*js).position[2] << ',' << (*js).position[3] << ',' << (*js).position[4] << ',' << (*js).position[5] << ',' << (*js).position[6] << std::endl;
       }
 
-      geometry_msgs::PoseStamped::ConstPtr vp = vp.minstantiate<geometry_msgs::PoseStamped>();
+      geometry_msgs::PoseStamped::ConstPtr vp = m.instantiate<geometry_msgs::PoseStamped>();
       if (vp != NULL) {
-        vive_file << msg_time << ',' << vp.pose.position.x << ',' << vp.pose.position.y << ',' << vp.pose.position.z
-                  << ',' << vp.pose.orientation.x << ',' << vp.pose.orientation.y << ',' << vp.pose.orientation.z << ',' << vp.pose.orientation.w << '\n';
+        vive_file << msg_time << ',' << (*vp).pose.position.x << ',' << (*vp).pose.position.y << ',' << (*vp).pose.position.z
+                  << ',' << (*vp).pose.orientation.x << ',' << (*vp).pose.orientation.y << ',' << (*vp).pose.orientation.z << ',' << (*vp).pose.orientation.w << '\n';
       }
+//
+      std_msgs::Float64MultiArray::ConstPtr j_cmd_ptr = m.instantiate<std_msgs::Float64MultiArray>();
+      if (j_cmd_ptr != NULL) {
+        std::vector<double> j_cmd = j_cmd_ptr->data;
+        KDL::Frame ee_pose = get_ee_pose(*j_cmd_ptr);
 
-      std_msgs::Float64MultiArray::ConstPtr j_cmd;
-      if (j_cmd != NULL) {
-        cmd_file << msg_time << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
+        double qx;
+        double qy;
+        double qz;
+        double qw;
+        ee_pose.M.GetQuaternion(qx, qy, qz, qw);
+        cmd_file << msg_time << ',';
+        cmd_file << ee_pose.p.x() << ',' << ee_pose.p.y() << ',' << ee_pose.p.z();
+        cmd_file << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw;
+        cmd_file << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
       }
   }
 
@@ -176,8 +210,6 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  rosbag::Bag bag;
-  bag.open("test.bag", rosbag::bagmode::Read);
-  process_bag(bag);
+  process_bag();
   return 0;
 }

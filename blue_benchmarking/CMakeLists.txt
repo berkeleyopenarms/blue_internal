@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   urdf
   roscpp
+  rosbag
   sensor_msgs
   std_msgs
   tf2
@@ -28,6 +29,8 @@ catkin_package(
 add_executable(rviz_show src/rviz_show.cpp)
 target_link_libraries(rviz_show ${catkin_LIBRARIES})
 
+add_executable(process_bag src/process_bag.cpp)
+target_link_libraries(process_bag ${catkin_LIBRARIES})
 #Making it executable from rosrun meakes raw_input not work. Look for future solutions.
 #catkin_install_python(PROGRAMS scripts/record_positions.py
 #  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
