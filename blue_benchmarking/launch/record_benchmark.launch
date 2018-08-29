@@ -2,5 +2,4 @@
 
    <node pkg="rosbag" type="record" name="rosbag_record_benchmark"
       args="record joint_states /right_arm/blue_controllers/joint_position_controller/command /right_arm/blue_hardware/motor_states /forearm_tracker_pose -o bench"/>
-
 </launch>
