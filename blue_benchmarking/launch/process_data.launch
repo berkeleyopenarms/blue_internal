@@ -15,7 +15,8 @@
     pkg="blue_benchmarking"
     type="process_bag"
     args="$(arg file_name)"
-    output="screen">
+    output="screen"
+    required="true">
   </node>
 
 </launch>

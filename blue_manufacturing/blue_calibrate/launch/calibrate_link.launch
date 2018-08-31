@@ -25,22 +25,19 @@
     type="rqt_gui"
     output="screen"/>
 
-  <!-- Start the hardware drivers -->
-  <include
-    file="$(find blue_hardware_drivers)/launch/motor_drivers.launch" />
-
   <!-- Start the control stack -->
   <node
     name="blue_controller_manager"
     pkg="blue_controller_manager"
     type="blue_controller_manager"
     output="screen" />
+
   <node name="controller_spawner"
     pkg="controller_manager"
     type="spawner"
     respawn="false"
     output="screen"
-    args="blue_controllers/joint_state_controller blue_controllers/joint_position_controller" />
+    args="blue_controllers/joint_state_controller blue_controllers/torque_controller" />
 
   <!-- Joint calibration -->
   <node
