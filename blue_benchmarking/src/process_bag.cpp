@@ -101,9 +101,9 @@ KDL::Frame get_ee_pose(const std_msgs::Float64MultiArray msg) {
 
 
 
-void process_bag() {
+void process_bag(char* file_name) {
   rosbag::Bag bag;
-  bag.open("/home/phil/bench_2018-08-25-21-17-32.bag", rosbag::bagmode::Read);
+  bag.open(file_name, rosbag::bagmode::Read);
 
   std::vector<std::string> topics;
   topics.push_back(std::string("joint_states"));
@@ -113,13 +113,13 @@ void process_bag() {
   rosbag::View view(bag, rosbag::TopicQuery(topics));
 
   std::ofstream ee_file;
-  ee_file.open ("/home/phil/ee.csv");
+  ee_file.open ("ee.csv");
   ee_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
   std::ofstream vive_file;
-  vive_file.open ("/home/phil/vive.csv");
+  vive_file.open ("vive.csv");
   vive_file << "time,x,y,z,qx,qy,qz,qw" << std::endl;
   std::ofstream cmd_file;
-  cmd_file.open ("/home/phil/cmd.csv");
+  cmd_file.open ("cmd.csv");
   cmd_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
 
   foreach(rosbag::MessageInstance const m, view) {
@@ -171,6 +171,11 @@ void process_bag() {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "inverse_kin_target");
   ros::NodeHandle node;
+  if (argc != 2){
+    ROS_ERROR("need bag file");
+  }
+  char* file_name = argv[1];
+  ROS_ERROR("%s", file_name);
 
   tf_buffer = new tf2_ros::Buffer();
   tf_listener = new tf2_ros::TransformListener(*tf_buffer);
@@ -210,6 +215,6 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  process_bag();
+  process_bag(file_name);
   return 0;
 }
