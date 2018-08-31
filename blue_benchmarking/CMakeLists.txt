@@ -22,7 +22,9 @@ find_package(orocos_kdl)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS blue_controllers
+)
 
 add_executable(rviz_show src/rviz_show.cpp)
 target_link_libraries(rviz_show ${catkin_LIBRARIES})

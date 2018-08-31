@@ -6,6 +6,9 @@
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <angles/angles.h>
+
+#include <cmath>
 
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
@@ -33,12 +36,16 @@ Eigen::Matrix<double, 3, Eigen::Dynamic> target_position(3, 1);
 KDL::Rotation target_rotation;
 
 bool started = false;
+float lock_threshhold = 0.4;
 
 std::vector<urdf::JointConstSharedPtr> joint_urdfs;
 
 std::vector<std::string> joint_names;
 std::vector<double> posture_target;
 std::vector<double> posture_weights;
+
+std::vector<double> lock_pos_;
+bool locked_ = false;
 
 Eigen::MatrixXd pseudoinverse(const Eigen::MatrixXd &mat, double tolerance)
 {
@@ -85,7 +92,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
     joint_positions_ik(i) = 0.2 * joint_positions(i) + 0.8 * posture_target[i];
     // TODO: ^consider factoring posture weights into this expression
 
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 10; i++) {
 
     // Compute jacobian via KDL
     KDL::Jacobian jacobian(nj);
@@ -124,7 +131,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     Eigen::MatrixXd delta_joint = jacobian_eigen.transpose() * deltaX;
 
-    double alpha = i > 20 ? 0.05 : 0.5;
+    double alpha = i > 5 ? 0.05 : 0.5;
 
     for (int j = 0; j < nj; j++) {
       joint_positions_ik(j) += alpha * delta_joint(j, 0);
@@ -158,10 +165,52 @@ void jointStateCallback(const sensor_msgs::JointState msg)
     }
   }
 
-  std_msgs::Float64MultiArray joint_command_msg;
+  std::vector<double> joint_command;
 
   for (int i = 0; i < nj; i++) {
-    joint_command_msg.data.push_back(joint_positions_ik(i));
+    joint_command.push_back(joint_positions_ik(i));
+  }
+
+  // Check to make sure IK isn't sending a crazy command
+  double norm_error = 0;
+  for(unsigned int i=0; i<nj; i++) {
+    double error = 0;
+    angles::shortest_angular_distance_with_limits(
+          joint_positions(i),
+          joint_positions_ik(i),
+          joint_urdfs[i]->limits->lower,
+          joint_urdfs[i]->limits->upper,
+          error);
+    ROS_WARN("Error for joint %d is %f. Joint Position: %f, Joint IK: %f", 
+        i, error, joint_positions(i), joint_positions_ik(i));
+    // Sum of squares
+    norm_error += std::pow(std::abs(error), 2);
+  }
+  norm_error /= nj;
+
+  // If our IK is too far off our current position, freeze the state until it returns to a reasonable position
+  if (!locked_ && norm_error >= lock_threshhold) {
+    lock_pos_.clear();
+    for(unsigned int i=0; i<nj; i++) {
+      lock_pos_.push_back(joint_positions(i));
+    }
+    locked_ = true;  
+    ROS_WARN("IK has %frad error. Joints locked!", norm_error); 
+  }
+  else if (norm_error < lock_threshhold && locked_) {
+    locked_ = false;
+    ROS_WARN("IK has %frad error. Joints unlocked!", norm_error); 
+  }
+  if (locked_) {
+    for(unsigned int i=0; i<nj; i++) {
+        joint_command[i] = lock_pos_[i];
+    }
+  }
+
+  // Publish the command
+  std_msgs::Float64MultiArray joint_command_msg;
+  for (int i = 0; i < nj; i++) {
+    joint_command_msg.data.push_back(joint_command[i]);
   }
   // ROS_ERROR("published command %d, %f", i, commandMsg.data[i]);
   joint_position_pub.publish(joint_command_msg);
@@ -173,9 +222,9 @@ void commandCallback(geometry_msgs::PoseStamped msg)
   t = tf_buffer->lookupTransform(base_link, msg.header.frame_id, ros::Time(0));
   tf2::doTransform(msg, msg, t);
 
-  target_position(0, 0) = msg.pose.position.x;
-  target_position(1, 0) = msg.pose.position.y;
-  target_position(2, 0) = msg.pose.position.z;
+  target_position(0, 0) = msg.pose.position.x*2;
+  target_position(1, 0) = msg.pose.position.y*2;
+  target_position(2, 0) = msg.pose.position.z*2;
   target_rotation = KDL::Rotation::Quaternion(
       msg.pose.orientation.x,
       msg.pose.orientation.y,

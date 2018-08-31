@@ -25,12 +25,14 @@
   <build_depend>urdf</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>blue_controllers</build_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>urdf</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>blue_controllers</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
