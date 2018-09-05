@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf2
   kdl_parser
+  blue_msgs
   interactive_markers
   tf
   visualization_msgs
