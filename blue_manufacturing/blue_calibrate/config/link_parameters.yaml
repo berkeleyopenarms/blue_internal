@@ -1,7 +1,7 @@
 blue_hardware:
     joint_names: ['lift_joint', 'roll_joint']
     motor_names: ['right_motor', 'left_motor']
-    motor_ids: [31, 32]
+    motor_ids: [43, 22]
     gear_ratios: [7.1875, 8.24448529412] # 8.24448529412 results from 7.1875 * (39 / 34) from the output gear
     current_to_torque_ratios: [0.626, 0.626] #[1.0, 1.0] # [0.626, 0.626]1.0 is decent approx for small motors
     current_offset: [0.0, 0.0]
@@ -10,14 +10,18 @@ blue_hardware:
     joint_torque_directions: [1.0, 1.0]
     motor_current_limits: [1.38, 1.38]
     id_torque_gains: [0.0, 0.0]
-    softstop_min_angles: [-8.2, -8.2]
-    softstop_max_angles: [8.2, 8.2]
+    softstop_min_angles: [-2.25, -2.6]
+    softstop_max_angles: [0.5, 2.6]
     differential_pairs: [0, 1]
     baselink: "base_link"
     #vive or rviz
     target_mode: "vive"
     softstop_torque_limit: 0.0
-    softstop_tolerance: 0.0
+    softstop_tolerance: 0.1
     accelerometer_calibration: false
     endlink: "roll_link"
-    serial_port: "/dev/ttyUSB1"
+    serial_port: "/dev/ttyUSB0"
+
+    accel_links:
+        - right_base_link
+        - right_shoulder_roll_link

@@ -6,6 +6,7 @@
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <blue_msgs/MotorState.h>
 
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
@@ -108,7 +109,8 @@ void process_bag(char* file_name) {
   std::vector<std::string> topics;
   topics.push_back(std::string("joint_states"));
   topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/command"));
-  topics.push_back(std::string("/right_arm/blue_hardware/motor_states"));
+  topics.push_back(std::string("/right_arm/motor_states"));
+  topics.push_back(std::string("/right_arm/joint_imu"));
   topics.push_back(std::string("/forearm_tracker_pose"));
   rosbag::View view(bag, rosbag::TopicQuery(topics));
 
@@ -121,6 +123,12 @@ void process_bag(char* file_name) {
   std::ofstream cmd_file;
   cmd_file.open ("cmd.csv");
   cmd_file << "time,x,y,z,qx,qy,qz,qw,j0,j1,j2,j3,j4,j5,j6" << std::endl;
+  std::ofstream motor_file;
+  motor_file.open ("motor.csv");
+  motor_file << "time,curr_cmd0,curr_cmd1,curr_cmd2,curr_cmd3,curr_cmd4,curr_cmd5,curr_cmd6" << std::endl;
+  std::ofstream acc_file;
+  acc_file.open ("acc.csv");
+  acc_file << "time,ax0,ay0,az0,ax1,ay1,az1,ax2,ay2,az2,ax3,ay3,az3,ax4,ay4,az4,ax5,ay5,az5,ax6,ay6,az6" << std::endl;
 
   foreach(rosbag::MessageInstance const m, view) {
       ros::Time msg_time = m.getTime();
@@ -133,10 +141,25 @@ void process_bag(char* file_name) {
         double qz;
         double qw;
         ee_pose.M.GetQuaternion(qx, qy, qz, qw);
+        // Load joint positions into KDL
+        int nj = kdl_chain.getNrOfJoints();
+        KDL::JntArray jpositions = KDL::JntArray(nj);
+        for (int i = 0; i < nj; i++) {
+          for (int j = 0; j < js->name.size(); j++) {
+            if (js->name[j].compare(joint_names[i]) == 0) {
+              jpositions(i) = js->position[j];
+              break;
+            }
+            if (j == js->name.size() - 1) {
+              ROS_ERROR("ERRORRORORORORO");
+            }
+          }
+        }
+
         ee_file << msg_time << ',';
         ee_file << ee_pose.p.x() << ',' << ee_pose.p.y() << ',' << ee_pose.p.z();
         ee_file << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw;
-        ee_file << ',' << (*js).position[0] << ',' << (*js).position[1] << ',' << (*js).position[2] << ',' << (*js).position[3] << ',' << (*js).position[4] << ',' << (*js).position[5] << ',' << (*js).position[6] << std::endl;
+        ee_file << ',' << jpositions(0) << ',' << jpositions(1) << ',' << jpositions(2) << ',' << jpositions(3) << ',' << jpositions(4) << ',' << jpositions(5) << ',' << jpositions(6) << std::endl;
       }
 
       geometry_msgs::PoseStamped::ConstPtr vp = m.instantiate<geometry_msgs::PoseStamped>();
@@ -160,6 +183,21 @@ void process_bag(char* file_name) {
         cmd_file << ',' << qx << ',' << qy << ',' << qz <<  ',' << qw;
         cmd_file << ',' << j_cmd[0] << ',' << j_cmd[1] << ',' << j_cmd[2] << ',' << j_cmd[3] << ',' << j_cmd[4] << ',' << j_cmd[5] << ',' << j_cmd[6] << '\n';
       }
+
+
+      blue_msgs::MotorState::ConstPtr m_ptr = m.instantiate<blue_msgs::MotorState>();
+      if (m_ptr != NULL) {
+        std::vector<float> cmd = m_ptr->command;
+        motor_file << msg_time << ',';
+        motor_file << cmd[0] << ',' << cmd[1] << ',' << cmd[2] << ',' << cmd[3] << ',' << cmd[4] << ',' << cmd[5] << ',' << cmd[6] << '\n';
+      }
+
+      // blue_msgs::ImuArray::ConstPtr a_ptr = m.instantiate<blue_msgs::ImuArray>();
+      // if (a_ptr != NULL) {
+        // std::vector<float> cmd = a_ptr->command;
+        // motor_file << msg_time << ',';
+        // motor_file << ',' << cmd[0] << ',' << cmd[1] << ',' << cmd[2] << ',' << cmd[3] << ',' << cmd[4] << ',' << cmd[5] << ',' << cmd[6] << '\n';
+      // }
   }
 
   bag.close();

@@ -34,6 +34,7 @@
     output="screen">
   </node>
 
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
   <!-- <node name="pos_plot" -->
     <!-- pkg="rqt_plot" -->
     <!-- type="rqt_plot" -->
