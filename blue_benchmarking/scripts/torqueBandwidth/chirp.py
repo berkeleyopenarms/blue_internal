@@ -14,11 +14,12 @@ print("Serial connected")
 mode = str(sys.argv[1])
 
 # Torque bandwidth: 0.1, 40, 60, 400, 6
-freq_start = 1 #Hz
-freq_end = 1 #Hz
-time_end = 180 #seconds
-eval_freq = 200 #evaluations per second
-max_torque = 8 #Nm
+# Hysteresis: .1, .1, 180, 400, 6
+freq_start = 2#0.1#.25 #Hz
+freq_end = 2#40#.25 #Hz
+time_end = 3#400 #seconds
+eval_freq = 400#300#200 #evaluations per second
+max_torque = 15#10 #Nm
 
 file_name = str(sys.argv[2]) + '_' + str(max_torque) + 'Nm' + '.csv'
 
@@ -63,6 +64,7 @@ def p():
 			print("All done")
 			break
 		rate.sleep()
+	print(time_elapsed)
 
 if __name__ == '__main__':
 	p()
