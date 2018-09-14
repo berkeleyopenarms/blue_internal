@@ -33,7 +33,8 @@
     type="spawner"
     respawn="false"
     output="screen"
-    args="blue_controllers/joint_state_controller blue_controllers/joint_position_controller" />
+    args="blue_controllers/joint_state_controller blue_controllers/torque_controller" />
+    <!-- args="blue_controllers/joint_state_controller blue_controllers/joint_position_controller" /> -->
 
   <!-- [> GUI <] -->
   <node

@@ -19,7 +19,7 @@ blue_controllers:
       - base_roll_joint
     base_roll_joint:
       pid:
-        p: 50
+        p: 100
         i: 0
-        d: 2
+        d: 8
         i_clamp: 0

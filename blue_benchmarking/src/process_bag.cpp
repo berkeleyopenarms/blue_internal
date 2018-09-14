@@ -108,10 +108,12 @@ void process_bag(char* file_name) {
 
   std::vector<std::string> topics;
   topics.push_back(std::string("joint_states"));
+  topics.push_back(std::string("/joint_states"));
   topics.push_back(std::string("/right_arm/blue_controllers/joint_position_controller/command"));
   topics.push_back(std::string("/right_arm/motor_states"));
   topics.push_back(std::string("/right_arm/joint_imu"));
   topics.push_back(std::string("/forearm_tracker_pose"));
+  topics.push_back(std::string("/Robot_1/pose"));
   rosbag::View view(bag, rosbag::TopicQuery(topics));
 
   std::ofstream ee_file;
@@ -162,10 +164,10 @@ void process_bag(char* file_name) {
         ee_file << ',' << jpositions(0) << ',' << jpositions(1) << ',' << jpositions(2) << ',' << jpositions(3) << ',' << jpositions(4) << ',' << jpositions(5) << ',' << jpositions(6) << std::endl;
       }
 
-      geometry_msgs::PoseStamped::ConstPtr vp = m.instantiate<geometry_msgs::PoseStamped>();
+      geometry_msgs::Pose::ConstPtr vp = m.instantiate<geometry_msgs::Pose>();
       if (vp != NULL) {
-        vive_file << msg_time << ',' << (*vp).pose.position.x << ',' << (*vp).pose.position.y << ',' << (*vp).pose.position.z
-                  << ',' << (*vp).pose.orientation.x << ',' << (*vp).pose.orientation.y << ',' << (*vp).pose.orientation.z << ',' << (*vp).pose.orientation.w << '\n';
+        vive_file << msg_time << ',' << (*vp).position.x << ',' << (*vp).position.y << ',' << (*vp).position.z
+                  << ',' << (*vp).orientation.x << ',' << (*vp).orientation.y << ',' << (*vp).orientation.z << ',' << (*vp).orientation.w << '\n';
       }
 //
       std_msgs::Float64MultiArray::ConstPtr j_cmd_ptr = m.instantiate<std_msgs::Float64MultiArray>();

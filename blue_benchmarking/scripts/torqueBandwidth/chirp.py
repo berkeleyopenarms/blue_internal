@@ -49,7 +49,9 @@ def p():
 			cmd.data = [pitch, roll]
 			count += 1
 			pub.publish(cmd)
+			print('b')
 			ser_bytes = ser.readline()
+			print('a')
 			decoded_bytes = str((ser_bytes[0:len(ser_bytes)-2].decode("utf-8")))
 			lst = decoded_bytes.split(',');
 			if len(lst)==2:
