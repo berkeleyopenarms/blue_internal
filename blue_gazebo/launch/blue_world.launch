@@ -8,7 +8,7 @@
     to="/joint_states" />
 
   <include
-    file="$(find blue_descriptions)/launch/gazebo.launch" />
+    file="$(find blue_gazebo)/launch/gazebo.launch" />
 
   <include
     file="$(find blue_gazebo)/launch/_single_arm_gazebo.launch">
