@@ -8,7 +8,7 @@
     to="/joint_states" />
 
   <include
-    file="$(find blue_descriptions)/launch/gazebo.launch" />
+    file="$(find blue_gazebo)/launch/gazebo.launch" />
 
   <include
     file="$(find blue_gazebo)/launch/_single_arm_gazebo.launch">
@@ -24,7 +24,7 @@
     name="rviz"
     pkg="rviz"
     type="rviz"
-    args="-d $(find blue_gazebo)/urdf.rviz" />
+    args="-d $(find blue_bringup)/config/blue.rviz" />
 
   <node
     name="robot_state_publisher"
@@ -34,6 +34,7 @@
     output="screen">
   </node>
 
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
   <!-- <node name="pos_plot" -->
     <!-- pkg="rqt_plot" -->
     <!-- type="rqt_plot" -->
