@@ -12,10 +12,14 @@
     type="rviz_teleop" />
 
   <!-- Inverse kinematics -->
+  <!-- <node -->
+    <!-- name="teleop_inverse_kinematics" -->
+    <!-- pkg="blue_teleop" -->
+    <!-- type="teleop_inverse_kinematics" /> -->
   <node
     name="teleop_inverse_kinematics"
     pkg="blue_teleop"
-    type="teleop_inverse_kinematics" />
+    type="blue_ik.py" />
 
   <!-- Start necessary controllers -->
   <node
