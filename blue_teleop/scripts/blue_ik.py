@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import rospy
+import tf2_ros
+import tf2_geometry_msgs
 import sys
 import actionlib
 from std_msgs.msg import Int32
@@ -14,6 +16,10 @@ from trac_ik_python.trac_ik_wrap import TRAC_IK
 
 class BlueIK:
     def _setup(self):
+        # build tf listener
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
+
         # load in ros parameters
         self.baselink = rospy.get_param("blue_hardware/baselink")
         self.endlink = rospy.get_param("blue_hardware/endlink")
@@ -39,9 +45,11 @@ class BlueIK:
         self.ik = TRAC_IK(self.baselink,
                      self.endlink,
                      urdf,
-                     0.005,
-                     1e-5,
-                    "Manipulation1")
+                     0.01,
+                     1e-4,
+                    "Distance")
+                    # "Manipulation2")
+                    # "Manipulation1")
 
     def publish_ik_sol(self, target, joints):
         # target is a target pose object
@@ -53,11 +61,13 @@ class BlueIK:
         result = self.ik.CartToJnt(seed_state,
                                target.position.x, target.position.y, target.position.z,
                                target.orientation.x, target.orientation.y, target.orientation.z, target.orientation.w, )
+        if not len(result) == self.num_joints:
+            return
         msg = Float64MultiArray()
         msg.data = result
         if self.debug:
-          rospy.loginfo("ik result")
-          rospy.loginfo(result)
+          rospy.logerr("ik result")
+          rospy.logerr(result)
         self.command_pub.publish(msg)
 
     def update_joints(self, joint_msg):
@@ -76,6 +86,9 @@ class BlueIK:
 
 
     def command_callback(self, msg):
+        trans = self.tfBuffer.lookup_transform(self.baselink, msg.header.frame_id, rospy.Time())
+        msg = tf2_geometry_msgs.do_transform_pose(msg, trans);
+
         temp_target = Pose()
 
         temp_target.position.x = msg.pose.position.x # x
