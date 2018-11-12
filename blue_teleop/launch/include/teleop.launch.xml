@@ -29,7 +29,7 @@
     output="screen">
     <rosparam param="start_controllers">
       - blue_controllers/gripper_controller
-      - blue_controllers/joint_position_controller
+      - blue_controllers/joint_ctc
     </rosparam>
   </node>
 

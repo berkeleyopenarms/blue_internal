@@ -66,14 +66,15 @@ class BlueIK:
         msg = Float64MultiArray()
         msg.data = result
         if self.debug:
-          rospy.logerr("ik result")
-          rospy.logerr(result)
+            pass
+            rospy.logerr("ik result")
+            rospy.logerr(result)
         self.command_pub.publish(msg)
+        self.command_pub_ctc.publish(msg)
 
     def update_joints(self, joint_msg):
         if self.first:
             return
-
 
         temp_joints = kdl.JntArray(self.num_joints)
         for i, n in enumerate(self.joint_names):
@@ -118,6 +119,7 @@ class BlueIK:
 
         rospy.Subscriber("pose_target/command", PoseStamped, self.command_callback)
         self.command_pub = rospy.Publisher("blue_controllers/joint_position_controller/command", Float64MultiArray, queue_size=1)
+        self.command_pub_ctc = rospy.Publisher("blue_controllers/joint_ctc/command", Float64MultiArray, queue_size=1)
         rospy.Subscriber("/joint_states", JointState, self.update_joints)
 
 def main():
