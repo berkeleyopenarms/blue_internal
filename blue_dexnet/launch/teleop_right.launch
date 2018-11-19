@@ -1,5 +1,0 @@
-<launch>
-
-  <include file="$(find gqcnn)/launch/grasp_planning_service.launch"/>
-
-</launch>

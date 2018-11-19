@@ -1,0 +1,29 @@
+<launch>
+
+  <include file="$(find gqcnn)/launch/grasp_planning_service.launch"/>
+
+  <node
+    name="blue_ik_solver"
+    pkg="blue_dexnet"
+    type="grasp.py" />
+
+  <!-- Start necessary controllers -->
+  <group ns="right_arm">
+    <node
+      name="$(anon blue_controller_spawner)"
+      pkg="blue_controller_manager"
+      type="spawner.py"
+      output="screen">
+      <rosparam param="start_controllers">
+        - blue_controllers/gripper_controller
+        - blue_controllers/joint_ctc
+      </rosparam>
+    </node>
+
+    <node
+      name="blue_ik_solver"
+      pkg="blue_dexnet"
+      type="grasp.py" />
+  </group>
+
+</launch>
