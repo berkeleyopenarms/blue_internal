@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package>
+  <name>blue_dexnet</name>
+  <version>0.0.0</version>
+  <description>The blue_dexnet package</description>
+
+  <maintainer email="phil80301@berkeley.edu">Lear Du</maintainer>
+
+  <license>BSD</license>
+
+  <author email="brentyi@berkeley.edu">Brent Yi</author>
+  <author email="phil80301@berkeley.edu">Philipp Wu</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>blue_controllers</build_depend>
+  <build_depend>trac_ik_python</build_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>urdf</run_depend>
+  <run_depend>trac_ik_python</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>blue_controllers</run_depend>
+</package>
