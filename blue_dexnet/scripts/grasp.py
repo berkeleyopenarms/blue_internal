@@ -63,8 +63,12 @@ class BlueIK:
                                target.orientation.x, target.orientation.y, target.orientation.z, target.orientation.w, )
         if not len(result) == self.num_joints:
             return
+        self.command_to_joint_state(result)
+
+    def command_to_joint_state(self, joints)
+        # joints is an array of 7 joint angles
         msg = Float64MultiArray()
-        msg.data = result
+        msg.data = joints
         if self.debug:
             pass
             rospy.logerr("ik result")
@@ -85,29 +89,7 @@ class BlueIK:
         ## TODO make publishing the result seperately
         self.publish_ik_sol(self.target_pose, self.joints)
 
-
-    def command_callback(self, msg):
-        trans = self.tfBuffer.lookup_transform(self.baselink, msg.header.frame_id, rospy.Time())
-        msg = tf2_geometry_msgs.do_transform_pose(msg, trans);
-
-        temp_target = Pose()
-
-        temp_target.position.x = msg.pose.position.x # x
-        temp_target.position.y = msg.pose.position.y # y
-        temp_target.position.z = msg.pose.position.z # z
-
-        temp_target.orientation.x = msg.pose.orientation.x # qx
-        temp_target.orientation.y = msg.pose.orientation.y # qy
-        temp_target.orientation.z = msg.pose.orientation.z # qz
-        temp_target.orientation.w = msg.pose.orientation.w # qw
-
-        self.target_pose = temp_target
-
-        if self.first:
-            self.first = False
-
     def __init__(self, debug=False):
-        rospy.init_node("blue_ik")
         self.debug = debug
         if self.debug:
             self.debug_count = 0
@@ -117,14 +99,24 @@ class BlueIK:
         self.target_pos = Pose()
         self.first = True
 
-        rospy.Subscriber("pose_target/command", PoseStamped, self.command_callback)
         self.command_pub = rospy.Publisher("blue_controllers/joint_position_controller/command", Float64MultiArray, queue_size=1)
         self.command_pub_ctc = rospy.Publisher("blue_controllers/joint_ctc/command", Float64MultiArray, queue_size=1)
         rospy.Subscriber("/joint_states", JointState, self.update_joints)
 
 def main():
+    rospy.init_node("blue_ik")
     b = BlueIK(debug=True)
-    rospy.spin()
+    home = [0, 0, 0, 0, 0, 0, 0]
+
+    # TODO init prime sense
+    # TODO create grasp service client
+    rate = rospy.Rate(0.05)
+    while not rospy.is_shutdow():
+        b.command_to_joint_state(home)
+        # TODO read in image from primesense
+        # TODO make service call
+        b.publish_ik_sol(from_service_call_PoseStamped message)
+
 
 if __name__ == "__main__":
     main()
