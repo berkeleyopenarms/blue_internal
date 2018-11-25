@@ -5,11 +5,8 @@ import tf2_ros
 import tf2_geometry_msgs
 import sys
 import actionlib
-from std_msgs.msg import Int32
-from std_msgs.msg import Float32
-from std_msgs.msg import Float64MultiArray
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Pose
+from std_msgs.msg import Int32, Float32, Float64MultiArray
+from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import JointState
 import PyKDL as kdl
 import kdl_parser_py.urdf as kdl_parser
@@ -61,10 +58,6 @@ class BlueIK:
         # set up chebychev points
         self.resolution = 100
         self.duration = 2
-
-        # build tf listener
-        self.tfBuffer = tf2_ros.Buffer()
-        self.listener = tf2_ros.TransformListener(self.tfBuffer)
 
         # load in ros parameters
         self.baselink = rospy.get_param("blue_hardware/baselink")
@@ -159,22 +152,52 @@ class BlueIK:
 
 def main():
     rospy.init_node("blue_ik")
+
+    tf_buffer = tf2_ros.Buffer(rospy.Duration(1200.0))
+    tf_listener = tf2_ros.TransformListener(tf_buffer)
+
     b = BlueIK(debug=True)
     home = [0, 0, 0, 0, 0, 0, 0]
     drop_off = [0, 0, 0, 0, 0, 0, 0]
     gc = GripperClient()
 
-    # TODO init prime sense
-    # TODO create grasp service client
     rate = rospy.Rate(0.05)
     while not rospy.is_shutdow():
         b.command_to_joint_state(home)
-        # TODO read in image from primesense
-        # TODO make service call
-        b.publish_ik_sol(from_service_call_PoseStamped message)
+
+        pose = get_dexnet_grasp_pose()
+
+        b.publish_ik_sol(pose, b.joints)
         gc.call_grip(1.0):
         b.command_to_joint_state(drop_off)
         gc.call_grip(0.0):
+
+def get_dexnet_grasp_pose():
+    plan_grasp = rospy.ServiceProxy('/gqcnn/grasp_planner', GQCNNGraspPlanner)
+
+    COLOR_TOPIC = "/camera/rgb/image_rect_color"
+    DEPTH_TOPIC = "/camera/depth/image_rect"
+    INFO_TOPIC = "/camera/depth/camera_info"
+
+    request = GQCNNGraspPlannerRequest()
+    request.color_image = rospy.wait_for_message(COLOR_TOPIC, Image)
+    request.depth_image = rospy.wait_for_message(DEPTH_TOPIC, Image)
+    request.camera_info = rospy.wait_for_message(INFO_TOPIC, CameraInfo)
+
+
+    response = plan_grasp(request)
+    grasp = response.grasp
+    pose = grasp.pose
+
+    transform = tf_buffer.lookup_transform(
+        "right_base_link",
+        request.camera_info.header.frame_id,
+        rospy.Time(0)
+    )
+
+    output_posestamped = tf2_geometry_msgs.do_transform_pose(PoseStamped(pose=pose), transform)
+    return output_posestamped.pose
+
 
 if __name__ == "__main__":
     main()
