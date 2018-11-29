@@ -2,6 +2,11 @@
 
   <include file="$(find gqcnn)/launch/grasp_planning_service.launch"/>
 
+  <!-- Load URDF -->
+  <param
+    name="robot_description"
+    command="$(find xacro)/xacro --inorder '$(find blue_dexnet)/robots/blue_dexnet.urdf.xacro'" />
+
   <node
     name="blue_ik_solver"
     pkg="blue_dexnet"
