@@ -12,14 +12,10 @@
     type="rviz_teleop" />
 
   <!-- Inverse kinematics -->
-  <!-- <node -->
-    <!-- name="teleop_inverse_kinematics" -->
-    <!-- pkg="blue_teleop" -->
-    <!-- type="teleop_inverse_kinematics" /> -->
   <node
     name="teleop_inverse_kinematics"
     pkg="blue_teleop"
-    type="blue_ik.py" />
+    type="teleop_inverse_kinematics" />
 
   <!-- Start necessary controllers -->
   <node
@@ -29,7 +25,7 @@
     output="screen">
     <rosparam param="start_controllers">
       - blue_controllers/gripper_controller
-      - blue_controllers/joint_ctc
+      - blue_controllers/joint_position_controller
     </rosparam>
   </node>
 
