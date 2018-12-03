@@ -60,7 +60,7 @@
         xyz="0 0 0" />
     </joint>
     <link
-      name="primesense_link">
+      name="camera_link">
       <inertial>
         <origin
           xyz="-0.023147 -0.0017078 -0.021581"
@@ -102,13 +102,17 @@
     <joint
       name="primesense_joint"
       type="fixed">
+      <!-- Pre-Brent's edits -->
+      <!-- <origin -->
+        <!-- xyz="0.011494 0.33383 0.61099" -->
+        <!-- rpy="-1.5708 1.5708 -3.1416" /> -->
       <origin
-        xyz="0.011494 0.33383 0.61099"
-        rpy="3.1416 2.609E-15 -3.1416" />
+        xyz="0.116494 0.33383 0.72599"
+        rpy="-1.5708 1.5708 -3.1416" />
       <parent
         link="camera_base_link" />
       <child
-        link="primesense_link" />
+        link="camera_link" />
       <axis
         xyz="0 0 0" />
     </joint>
