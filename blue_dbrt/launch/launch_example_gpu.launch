@@ -1,0 +1,7 @@
+<launch>
+
+   <include file="$(find dbrt_example)/launch/launch_components/setup.launch" />
+   <include file="$(find dbrt_example)/launch/launch_components/fusion_tracker_gpu.launch" />
+   <include file="$(find dbrt_example)/launch/launch_components/play_bagfile.launch" />
+
+</launch>

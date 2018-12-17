@@ -1,0 +1,11 @@
+<launch>
+
+  <arg name="config" default="$(find dbrt_example)/config/fusion_tracker_gpu.yaml" />
+
+  <node name="fusion_tracker" type="fusion_tracker" pkg="dbrt" output="screen" respawn="false" launch-prefix="">
+    <param name="robot_description_package_path" type="string" value="$(find apollo_robot_model)" />
+    <rosparam command="load" file="$(arg config)" />
+    <rosparam command="load" file="$(find dbrt_example)/config/camera.yaml" />
+  </node>
+
+</launch>

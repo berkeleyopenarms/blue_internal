@@ -134,7 +134,7 @@ class BlueIK:
         if self.debug:
             pass
             # rospy.logerr("ik result")
-            # rospy.logerr(joints)
+        rospy.logerr(joints)
         self.command_pub.publish(msg)
         self.command_pub_ctc.publish(msg)
 
