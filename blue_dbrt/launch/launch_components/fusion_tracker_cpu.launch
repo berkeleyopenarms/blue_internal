@@ -3,7 +3,7 @@
   <arg name="config" default="$(find blue_dbrt)/config/fusion_tracker_cpu.yaml" />
 
   <node name="fusion_tracker" type="fusion_tracker" pkg="dbrt" output="screen" respawn="false" launch-prefix="">
-    <param name="robot_description_package_path" type="string" value="$(find blue_descriptions)" />
+    <param name="robot_description_package_path" type="string" value="$(find blue_dexnet)" />
     <rosparam command="load" file="$(arg config)" />
     <rosparam command="load" file="$(find blue_dbrt)/config/camera.yaml" />
   </node>

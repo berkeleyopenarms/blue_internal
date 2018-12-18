@@ -3,10 +3,10 @@
   <!-- <param name="use_sim_time" value="true" /> -->
 
   <param name="robot_description"
-      command="$(find xacro)/xacro '$(find blue_descriptions)/robots/blue_right.urdf.xacro'" />
+      command="$(find xacro)/xacro '$(find blue_dexnet)/robots/blue_dexnet.urdf.xacro'" />
 
   <param name="robot_description_blue"
-      command="$(find xacro)/xacro '$(find blue_descriptions)/robots/blue_right.urdf.xacro'" />
+      command="$(find xacro)/xacro '$(find blue_dexnet)/robots/blue_dexnet.urdf.xacro'" />
 
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
 
