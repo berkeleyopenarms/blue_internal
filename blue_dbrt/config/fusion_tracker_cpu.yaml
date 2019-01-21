@@ -29,23 +29,23 @@ camera_delay: 0.033
 joint_observation:
   joint_sigmas: [
     # left arm  # right arm  # left hand  # right hand
-     right_base_roll_joint: 100.,
-     right_shoulder_lift_joint: 100.,
-     right_shoulder_roll_joint:  100.,
-     right_elbow_lift_joint:  100.,
-     right_elbow_roll_joint:  100.,
-     right_wrist_lift_joint: 100.,
-     right_wrist_roll_joint: 100.,
-     right_gripper_joint:  100.
+     right_base_roll_joint:      0.,
+     right_shoulder_lift_joint:  0.,
+     right_shoulder_roll_joint:  0.,
+     right_elbow_lift_joint:     0.,
+     right_elbow_roll_joint:     0.,
+     right_wrist_lift_joint:     0.,
+     right_wrist_roll_joint:     0.,
+     right_gripper_joint:        0.
 
-    # left_base_roll_joint: 100.,
-    # left_shoulder_lift_joint: 100.,
-    # left_shoulder_roll_joint:  100.,
-    # left_elbow_lift_joint:  100.,
-    # left_elbow_roll_joint:  100.,
-    # left_wrist_lift_joint: 100.,
-    # left_wrist_roll_joint: 100.,
-    # left_gripper_joint:  100.
+    # left_base_roll_joint:      0.,
+    # left_shoulder_lift_joint:  0.,
+    # left_shoulder_roll_joint:  0.,
+    # left_elbow_lift_joint:     0.,
+    # left_elbow_roll_joint:     0.,
+    # left_wrist_lift_joint:     0.,
+    # left_wrist_roll_joint:     0.,
+    # left_gripper_joint:        0.
   ]
 
 joint_transition:
