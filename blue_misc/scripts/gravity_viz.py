@@ -21,9 +21,9 @@ def get_accel(msg):
         marker.header.frame_id = frame
         marker.type = marker.ARROW
         marker.action = marker.ADD
-        marker.scale.x = 0.2
-        marker.scale.y = 0.2
-        marker.scale.z = 0.2
+        marker.scale.x = 0.05
+        marker.scale.y = 0.05
+        marker.scale.z = 0.05
         marker.color.a = 1.0
         marker.color.r = 1.0
         marker.color.g = 1.0
