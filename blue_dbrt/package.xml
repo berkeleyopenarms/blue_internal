@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <name>blue_dbrt</name>
+  <version>0.1.0</version>
+  <description>This package contains an example usage of dbrt.</description>
+
+  <maintainer email="jan.issac@gmail.com">Jan Issac</maintainer>
+
+  <license>GPL 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>dbrt</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>apollo_robot_model</run_depend>
+  <run_depend>rviz</run_depend>
+  <run_depend>rosbag</run_depend>
+
+  <export />
+</package>

@@ -1,0 +1,10 @@
+<launch>
+
+  # we play the example sequence with the parameters --clock,
+  # such that the timestamps from the bagfile are used,
+  # and we play it at a rate of 0.3 for more convenient visualization
+
+  <node pkg="rosbag" type="play" name="player" output="screen" 
+   args="--clock --rate=0.3 $(find dbrt_example)/data/example_sequence.bag"/>
+
+</launch>

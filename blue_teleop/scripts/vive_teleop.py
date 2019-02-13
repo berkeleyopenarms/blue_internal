@@ -45,6 +45,7 @@ class GripperClient(object):
     def goal_callback(self, msg):
         self._goal.command.position = -1.5 * msg.data
         self._client.send_goal(self._goal)
+        # rospy.logerr("msg.data: {}".format(msg.data))
         self.wait()
 
     def set_effort(self, eff):

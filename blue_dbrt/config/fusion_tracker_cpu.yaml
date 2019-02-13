@@ -1,0 +1,249 @@
+# ROBOT SPECIFIC SETTINGS ====================================================================
+# first of all, you will have to adapt all the link and joint names to your robot.
+# you might also have to adjust parameters to your robot, their meaning is explained below.
+
+# the robot description used by the algorithm
+robot_description_name: robot_description
+
+# we do not render the entire robot, but only it's arms. below we
+# specify the links at which we start rendering
+rendering_root_left: left_base_link
+rendering_root_right: right_base_link
+
+# we publish the tf of the estimated robot pose under the prefix /estimated.
+# below we specify at which frame this estimated tf is connected to the
+# standard tf
+tf_connecting_frame: camera_depth_optical_frame
+# tf_connecting_frame: camera_frame
+
+# often, the timestamp of the depth images is not quite correct.
+# we have true_timestamp = image_timestamp - camera delay
+camera_delay: 0.033
+
+# below you find the paramters of the observation and state transition models,
+# as introduced in [1].
+
+# the noise magnitude on joint encoders is typically very low, for simplicity of analysis
+# we set it to zero. you will not need to adapt these parameters, unless your robot
+# has very noisy joint encoders.
+joint_observation:
+  joint_sigmas: [
+    # left arm  # right arm  # left hand  # right hand
+     right_base_roll_joint:      0.,
+     right_shoulder_lift_joint:  0.,
+     right_shoulder_roll_joint:  0.,
+     right_elbow_lift_joint:     0.,
+     right_elbow_roll_joint:     0.,
+     right_wrist_lift_joint:     0.,
+     right_wrist_roll_joint:     0.,
+     right_gripper_joint:        0.
+
+    # left_base_roll_joint:      0.,
+    # left_shoulder_lift_joint:  0.,
+    # left_shoulder_roll_joint:  0.,
+    # left_elbow_lift_joint:     0.,
+    # left_elbow_roll_joint:     0.,
+    # left_wrist_lift_joint:     0.,
+    # left_wrist_roll_joint:     0.,
+    # left_gripper_joint:        0.
+  ]
+
+joint_transition:
+  # the joint angles vary at a much higher rate than the biases. for simplicity of
+  # analysis we set it to a very large value, practically equivalent to inf.
+  # you will not need to change these parameters.
+  joint_sigmas: [
+    # left arm  # right arm  # left hand  # right hand
+     right_base_roll_joint: 100.,
+     right_shoulder_lift_joint: 100.,
+     right_shoulder_roll_joint:  100.,
+     right_elbow_lift_joint:  100.,
+     right_elbow_roll_joint:  100.,
+     right_wrist_lift_joint: 100.,
+     right_wrist_roll_joint: 100.,
+     right_gripper_joint:  100.
+
+    # left_base_roll_joint: 100.,
+    # left_shoulder_lift_joint: 100.,
+    # left_shoulder_roll_joint:  100.,
+    # left_elbow_lift_joint:  100.,
+    # left_elbow_roll_joint:  100.,
+    # left_wrist_lift_joint: 100.,
+    # left_wrist_roll_joint: 100.,
+    # left_gripper_joint:  100.
+    ]
+
+  # these parameters define how quickly we expect the joint angle bias to vary.
+  # the values are the standard deviation of the Gaussian noise injected into the biases.
+  # the standard parameters should work well for a wide range of situations, but can
+  # be tuned if necessary.
+  # lower values lead to: slower adaptation to biases, smaller max correctable bias,
+  # but more steady estimates. larger values lead to opposite behavior.
+  bias_sigmas: [
+    # left arm  # right arm  # left hand  # right hand
+     right_base_roll_joint:      0.005,
+     right_shoulder_lift_joint:  0.005,
+     right_shoulder_roll_joint:  0.005,
+     right_elbow_lift_joint:     0.005,
+     right_elbow_roll_joint:     0.005,
+     right_wrist_lift_joint:     0.005,
+     right_wrist_roll_joint:     0.005,
+     right_gripper_joint:        0.005
+
+    # left_base_roll_joint:      0.005,
+    # left_shoulder_lift_joint:  0.005,
+    # left_shoulder_roll_joint:  0.005,
+    # left_elbow_lift_joint:     0.005,
+    # left_elbow_roll_joint:     0.005,
+    # left_wrist_lift_joint:     0.005,
+    # left_wrist_roll_joint:     0.005,
+    # left_gripper_joint:        0.005
+    ]
+
+  # these parameters specify the forgetting factor the bias is multiplied with at each time step.
+  # we picked a forgetting factor of c=0.5 (i.e., after one second the bias is halfed, if
+  # there is no evidence to the contrary). our joint angle measurements arrive each
+  # dt=1/100 seconds. hence, the forgetting factor for one time step is c^dt=0.993092.
+  # the standard parameters should work well for a wide range of situations, but can
+  # be tuned if necessary.
+  # lower values lead to: faster convergence of bias to 0 in absence of evidence,
+  # smaller max correctable bias, more steady estimates. larger values lead to opposite behavior.
+  #
+  # these parameters also serve as switches, determining which joints have to be corrected
+  # using visual estimates. if the value is 0 for a given joint, then the bias is always 0,
+  # and our estimate will simply be the joint angle measurement. here for instance, we do not
+  # correct the left arm and hand, because they are not being used, and we do not correct the
+  # eyes, because they are irrelevant. furthermore, we do not correct right hand here,
+  # because we might not care so much about precision in the hand, or we might simply trust
+  # the joint encoders of the hand enough, such that no correction is necessary.
+  bias_factors: [
+    # left arm  # right arm  # left hand  # right hand
+     right_base_roll_joint:      0.993092,
+     right_shoulder_lift_joint:  0.993092,
+     right_shoulder_roll_joint:  0.993092,
+     right_elbow_lift_joint:     0.993092,
+     right_elbow_roll_joint:     0.993092,
+     right_wrist_lift_joint:     0.993092,
+     right_wrist_roll_joint:     0.993092,
+     right_gripper_joint:        0.0
+
+    # left_base_roll_joint:      0.993092,
+    # left_shoulder_lift_joint:  0.993092,
+    # left_shoulder_roll_joint:  0.993092,
+    # left_elbow_lift_joint:     0.993092,
+    # left_elbow_roll_joint:     0.993092,
+    # left_wrist_lift_joint:     0.993092,
+    # left_wrist_roll_joint:     0.993092,
+    # left_gripper_joint:        0.0
+    ]
+
+# below we specify the sampling blocks of the coordinate particle filter [3].
+# it is advisable to not sample all dimensions at once, because this is too high
+# dimensional. ideally we assign the joints to blocks, such that very related
+# joints are in the same block, see below for an example. the block names are
+# just for readability, you can assign any name you like.
+# TODO: fix this
+sampling_blocks:
+  - right_upper_arm: [ right_base_roll_joint, right_shoulder_lift_joint, right_shoulder_roll_joint, right_elbow_lift_joint ]
+  - right_lower_arm: [ right_elbow_roll_joint, right_wrist_lift_joint, right_wrist_roll_joint ]
+  - not_corrected:   [ right_gripper_joint]
+  # - neck:            [ B_HN, B_HT, B_HR ]                                    # neck
+  # - not_corrected:   [ L_EP, L_ET, R_EP, R_ET,                               # eyes
+                       # left_base_roll_joint, left_shoulder_lift_joint, left_shoulder_roll_joint, left_elbow_lift_joint, left_elbow_roll_joint, left_wrist_lift_joint, left_wrist_roll_joint,         # left arm
+                       # left_gripper_joint, L_LF, L_LF2, left_gripper_joint2, L_RF, L_RF2, L_MF, L_MF2,   # left hand
+                       # right_gripper_joint, R_LF, R_LF2, right_gripper_joint2, R_RF, R_RF2, R_MF, R_MF2 ]  # right hand
+
+# you can estimate an offset between the nominal camera pose in the kinematic model,
+# and the true camera pose. this allows for precise hand-eye coordination even if
+# the kinematic model has some inaccuracies. the way we do this is by automatically
+# inserting 6 virtual joints between the nominal and the true camera, and then
+# estimating the biases in the same way as for the other joints. so the
+# paramters below follow the same logic as the parameters above and will
+# not be explained again.
+camera_offset:
+  # turn on or off camera offset estimation. the following parameters are only
+  # relevant if this is set to true.
+  estimate_camera_offset: true
+
+  joint_observation:
+    joint_sigmas: [
+      X_JOINT:     0.0, Y_JOINT:   0.0, Z_JOINT:    0.0,
+      PITCH_JOINT: 0.0, YAW_JOINT: 0.0, ROLL_JOINT: 0.0
+    ]
+
+  joint_transition:
+    joint_sigmas: [
+      X_JOINT:     100., Y_JOINT:   100., Z_JOINT:    100.,
+      PITCH_JOINT: 100., YAW_JOINT: 100., ROLL_JOINT: 100.
+    ]
+    bias_sigmas:  [
+      X_JOINT:     0.0005, Y_JOINT:   0.0005, Z_JOINT:    0.0005,
+      PITCH_JOINT: 0.0005, YAW_JOINT: 0.0005, ROLL_JOINT: 0.0005
+    ]
+    bias_factors: [
+      X_JOINT:     0.993092, Y_JOINT:   0.993092, Z_JOINT:    0.993092,
+      PITCH_JOINT: 0.993092, YAW_JOINT: 0.993092, ROLL_JOINT: 0.993092
+    ]
+
+  # we also have to specify to which sampling block these virtual joints are added.
+  # you can either define a new sampling blocks, as we do here, or add them to
+  # an existing sampling block from above, by using an existing name.
+  sampling_blocks:
+    - camera_offset: [
+        X_JOINT, Y_JOINT, Z_JOINT,
+        PITCH_JOINT, YAW_JOINT, ROLL_JOINT]
+
+
+# ROBOT INDEPENDENT SETTINGS ====================================================================
+
+# filter settings
+use_gpu: false
+
+cpu:
+  # the number of particles if using cpu
+  sample_count: 100
+
+gpu:
+  # the number of particles if using gpu
+  sample_count: 200
+
+  # set true to use custom shader definitions file defined below
+  # if set to false, the default shader will be used
+  use_custom_shaders: false
+
+  vertex_shader_file: /path/to/custom/vertex_shader.vertexshader
+  fragment_shader_file: /path/to/custom/fragment_shader.fragmentshader
+
+  # optional (values: none | /path/to/shader)
+  geometry_shader_file: none
+
+# if desired, exponential smoothing can be performed on the output
+# of the filter. [1.0: no smoothing, 0.0: maximal smoothing]
+moving_average_update_rate: 1.0
+
+# particles will only be resampled if their weights are very concentrated.
+# this parameter is a measure of this concentration.
+# 0.0: particles will be resampled at each step
+# inf: particles will never be resampled
+max_kl_divergence: 2.0
+
+observation:
+  occlusion:
+    initial_occlusion_prob: 0.25  # stationary value
+    p_occluded_visible: 0.1
+    p_occluded_occluded: 0.7
+  kinect:
+    # these parameters specify the observation model for a single pixel,
+    # for details please check [2]
+    tail_weight: 0.01
+    model_sigma: 0.003
+    sigma_factor: 0.0
+  # the time step between two images
+  delta_time: 0.033
+
+
+
+
+# [1] Garcia Cifuentes et al. Probabilistic Articulated Real-Time Tracking for Robot Manipulation, ICRA 2017
+# [2] Wuthrich et al., Probabilistic Object Tracking Using a Range Camera, IROS 2013
+# [3] Wuthrich et al., The Coordinate Particle Filter - A novel Particle Filter for High Dimensional Systems, ICRA 2015
