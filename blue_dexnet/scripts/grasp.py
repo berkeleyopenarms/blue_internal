@@ -59,7 +59,7 @@ class BlueIK:
     def _setup(self):
         # set up chebychev points
         self.resolution = 100
-        self.duration = 2
+        self.duration = 0.8
 
         # load in ros parameters
         self.baselink = rospy.get_param("blue_hardware/baselink")
@@ -86,8 +86,8 @@ class BlueIK:
         self.ik = TRAC_IK(self.baselink,
                      self.endlink,
                      urdf,
-                     0.01,
-                     1e-4,
+                     0.005,
+                     5e-5,
                     "Distance")
                     # "Manipulation2")
                     # "Manipulation1")
@@ -179,6 +179,8 @@ def main():
     home = [-0.15208293855086608, -1.0777625536379607, -0.30204305465256565, -1.4497133621879246, -0.08187244407685634, -2.0945666974938435, -0.2878050626449791]
     drop_off = home
 
+    table_drop_off = [0.05788726806640632, -1.5100804483164913, -0.04850312740321561, -1.4143215789794925, 0.08686070962295389, -1.5905121128248134, -0.4141304126683034]
+
     gc = GripperClient()
 
     rate = rospy.Rate(0.05)
@@ -187,7 +189,11 @@ def main():
         b.command_to_joint_state(home)
         rospy.logerr("done home")
 
-        pose_stamped = get_dexnet_grasp_pose(tf_buffer)
+        try:
+            pose_stamped = get_dexnet_grasp_pose(tf_buffer)
+        except:
+            rospy.sleep(1.0)
+            continue
 
         pub.publish(pose_stamped)
         pub.publish(pose_stamped)
@@ -197,15 +203,19 @@ def main():
 
 
         rospy.logerr("commanding")
-        pose_stamped.pose.position.z += 0.2
+        pose_stamped.pose.position.z += 0.25
         b.ik_sol(pose_stamped.pose, b.joints)
-        pose_stamped.pose.position.z -= 0.2
+        pose_stamped.pose.position.z -= 0.1
         b.ik_sol(pose_stamped.pose, b.joints)
+        pose_stamped.pose.position.z -= 0.147
+        b.ik_sol(pose_stamped.pose, b.joints)
+        rospy.sleep(2.0)
         gc.call_grip(1.0)
         pose_stamped.pose.position.z += 0.2
         b.ik_sol(pose_stamped.pose, b.joints)
         b.command_to_joint_state(drop_off)
-        rospy.sleep(0.5)
+        b.command_to_joint_state(table_drop_off)
+        rospy.sleep(0.2)
         gc.call_grip(0.0)
 
 def get_dexnet_grasp_pose(tf_buffer):

@@ -2,7 +2,9 @@
 
   <include file="$(find blue_bringup)/launch/right.launch" pass_all_args="true" />
 
-  <include file="$(find gqcnn)/launch/grasp_planning_service.launch"/>
+  <include file="$(find gqcnn)/launch/grasp_planning_service.launch">
+    <arg name="model_name" value="GQCNN-4.0-BLUE"/>
+  </include>
 
   <!-- Load URDF -->
   <param
