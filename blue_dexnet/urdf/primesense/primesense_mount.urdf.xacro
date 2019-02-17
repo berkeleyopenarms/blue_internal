@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!-- XML namespaces -->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Right arm support only -->
+
+  <!-- ============================  primesense and mount ============================ -->
+  <xacro:macro name="blue_primesense_mount" params="side">
+    <link
+      name="camera_mount_link">
+      <inertial>
+        <origin
+          xyz="0.013428 0.042537 0.33147"
+          rpy="0 0 0" />
+        <mass
+          value="0.72241" />
+        <inertia
+          ixx="0.042295"
+          ixy="0.000279"
+          ixz="0.001393"
+          iyy="0.039578"
+          iyz="-0.0036206"
+          izz="0.0036069" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://blue_dexnet/meshes/camera_mount_link.STL" />
+        </geometry>
+        <material
+          name="">
+          <color
+            rgba="0.79216 0.81961 0.93333 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://blue_dexnet/meshes/camera_mount_link.STL" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="camera_mount_joint"
+      type="fixed">
+      <origin
+        xyz="0.20002 0.097409 -0.0254"
+        rpy="-3.5679E-18 2.6645E-15 -3.1416" />
+      <parent
+        link="${side}_base_link" />
+      <child
+        link="camera_mount_link" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
+
+  </xacro:macro>
+
+</robot>
+
