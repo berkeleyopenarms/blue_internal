@@ -4,7 +4,7 @@
 
   <!-- Right arm support only -->
 
-  <!-- ============================  primesense and mount ============================ -->
+  <!-- ============================  primesense mount ============================ -->
   <xacro:macro name="blue_primesense_mount" params="side">
     <link
       name="camera_mount_link">
