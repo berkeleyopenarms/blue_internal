@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot name="sensor_primesense" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Xacro properties -->
+  <xacro:property name="cam_px" value="0.135" />
+  <xacro:property name="cam_py" value="-0.24" />
+  <xacro:property name="cam_pz" value="0.7" />
+  <xacro:property name="cam_or" value="3.14159265" />
+  <xacro:property name="cam_op" value="1.57079" />
+  <xacro:property name="cam_oy" value="-1.57079" />
+
+  <xacro:property name="M_PI" value="3.14159265" />
+
+  <xacro:property name="primesense_depth_rel_rgb_py" value="0.0270" />
+  <xacro:property name="primesense_cam_rel_rgb_py"   value="-0.0220" />
+
+  <!-- Parameterised in part by the values in turtlebot_properties.urdf.xacro -->
+  <xacro:macro name="sensor_primesense" params="parent">
+    <joint name="camera_rgb_joint" type="fixed">
+      <origin xyz="${cam_px} ${cam_py} ${cam_pz}"
+              rpy="${cam_or} ${cam_op} ${cam_oy}"/>
+      <parent link="${parent}"/>
+      <child link="camera_rgb_frame" />
+    </joint>
+    <link name="camera_rgb_frame"/>
+
+    <joint name="camera_rgb_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="camera_rgb_frame" />
+      <child link="camera_rgb_optical_frame" />
+    </joint>
+    <link name="camera_rgb_optical_frame"/>
+
+    <joint name="camera_joint" type="fixed">
+      <origin xyz="0 ${primesense_cam_rel_rgb_py} 0"
+              rpy="0 0 0"/>
+      <parent link="camera_rgb_frame"/>
+      <child link="camera_link"/>
+    </joint>
+    <link name="camera_link">
+      <visual>
+        <origin xyz="-0.015 0.0035 0.004" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://blue_dexnet/meshes/primesense_camera.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <geometry>
+        <box size="0.0730 0.2760 0.0720"/>
+      </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.170" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.001152600" ixy="0.0" ixz="0.0"
+                 iyy="0.000148934" iyz="0.0"
+                 izz="0.001154654" />
+      </inertial>
+    </link>
+
+    <joint name="camera_depth_joint" type="fixed">
+      <origin xyz="0 ${primesense_depth_rel_rgb_py} 0" rpy="0 0 0" />
+      <parent link="camera_rgb_frame" />
+      <child link="camera_depth_frame" />
+    </joint>
+    <link name="camera_depth_frame"/>
+
+    <joint name="camera_depth_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="camera_depth_frame" />
+      <child link="camera_depth_optical_frame" />
+    </joint>
+    <link name="camera_depth_optical_frame"/>
+
+  </xacro:macro>
+</robot>
