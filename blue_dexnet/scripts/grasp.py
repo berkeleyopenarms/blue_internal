@@ -86,7 +86,7 @@ class BlueIK:
         self.ik = TRAC_IK(self.baselink,
                      self.endlink,
                      urdf,
-                     0.005,
+                     0.1,
                      5e-5,
                     "Distance")
                     # "Manipulation2")
@@ -166,6 +166,22 @@ class BlueIK:
         self.command_pub_ctc = rospy.Publisher("blue_controllers/joint_ctc/command", Float64MultiArray, queue_size=1)
         #  rospy.Subscriber("/joint_states", JointState, self.update_joints)
 
+def grasp_at_pose(b, pose_stamped):
+    pose_stamped.pose.position.z += 0.25
+    b.ik_sol(pose_stamped.pose, b.joints)
+
+
+    pose_stamped.pose.position.z -= 0.247
+    b.ik_sol(pose_stamped.pose, b.joints)
+
+    # grab object
+    rospy.sleep(2.0)
+    gc.call_grip(1.0)
+
+    pose_stamped.pose.position.z += 0.2
+    b.ik_sol(pose_stamped.pose, b.joints)
+
+
 def main():
     rospy.init_node("blue_ik")
 
@@ -203,16 +219,9 @@ def main():
 
 
         rospy.logerr("commanding")
-        pose_stamped.pose.position.z += 0.25
-        b.ik_sol(pose_stamped.pose, b.joints)
-        pose_stamped.pose.position.z -= 0.1
-        b.ik_sol(pose_stamped.pose, b.joints)
-        pose_stamped.pose.position.z -= 0.147
-        b.ik_sol(pose_stamped.pose, b.joints)
-        rospy.sleep(2.0)
-        gc.call_grip(1.0)
-        pose_stamped.pose.position.z += 0.2
-        b.ik_sol(pose_stamped.pose, b.joints)
+
+        grasp_at_pose(b, pose_stamped)
+
         b.command_to_joint_state(drop_off)
         b.command_to_joint_state(table_drop_off)
         rospy.sleep(0.2)
