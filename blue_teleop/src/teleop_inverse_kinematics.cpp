@@ -89,7 +89,7 @@ void jointStateCallback(const sensor_msgs::JointState msg)
   // Iteratively solve for a (regularized) IK solution
   KDL::JntArray joint_positions_ik = KDL::JntArray(nj);
   for (int i = 0; i < nj; i++) {
-    joint_positions_ik(i) = 0.7 * joint_positions(i) + 0.3 * posture_target[i];
+    joint_positions_ik(i) = 0.9 * joint_positions(i) + 0.1 * posture_target[i];
     // TODO: ^consider factoring posture weights into this expression
   }
 
@@ -123,16 +123,19 @@ void jointStateCallback(const sensor_msgs::JointState msg)
 
     Eigen::Matrix<double, 3, Eigen::Dynamic> position_difference = target_position - current_position;
     Eigen::Matrix<double, 6, Eigen::Dynamic> deltaX(6,1);
-    deltaX(0, 0) = position_difference(0, 0);
-    deltaX(1, 0) = position_difference(1, 0);
-    deltaX(2, 0) = position_difference(2, 0);
+
+    double position_weight = 20.0;
+
+    deltaX(0, 0) = position_difference(0, 0) * position_weight;
+    deltaX(1, 0) = position_difference(1, 0) * position_weight;
+    deltaX(2, 0) = position_difference(2, 0) * position_weight;
     deltaX(3, 0) = rotation_difference_vec(0);
     deltaX(4, 0) = rotation_difference_vec(1);
     deltaX(5, 0) = rotation_difference_vec(2);
 
     Eigen::MatrixXd delta_joint = jacobian_eigen.transpose() * deltaX;
 
-    double alpha = i > 15 ? 0.05 : 0.5;
+    double alpha = i < 2 ? 0.1 : 0.01;
 
     for (int j = 0; j < nj; j++) {
       joint_positions_ik(j) += alpha * delta_joint(j, 0);
